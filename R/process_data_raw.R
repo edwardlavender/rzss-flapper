@@ -108,8 +108,8 @@ physio <-
 
 #### Fix symbols in variable values
 # Some variables are recorded with '<'
-physio$be_1 <- stringr::str_replace_all(physio$be_1, "<", "")
-physio$be_2 <- stringr::str_replace_all(physio$be_2, "<", "")
+physio$be_1 <- stringr::str_replace_all(physio$be_1, "<", NA_character_)
+physio$be_2 <- stringr::str_replace_all(physio$be_2, "<", NA_character_)
 # Check for any ? or < symbols
 for(i in 1:ncol(physio)){
   # print(i)
@@ -125,6 +125,7 @@ physio$vemco[physio$vemco == "N"] <- NA
 physio$vemco                      <- factor(physio$vemco)
 physio$age                        <- factor(physio$age)
 physio$age_uncertain              <- factor(physio$age_uncertain)
+physio$sex                        <- factor(physio$sex)
 physio$gaff                       <- factor(physio$gaff)
 physio$gaff_uncertain             <- factor(physio$gaff_uncertain)
 physio$healthy                    <- factor(physio$healthy)
@@ -134,6 +135,20 @@ physio$size_disc  <- round(physio$size_disc)
 physio$size_len   <- round(physio$size_len)
 physio$size_wt    <- round(physio$size_wt)
 
+#### Fix problematic values
+## Skate 7093028 has a problematic PH1 value (extreme alkalinosis)
+# Other related parameters for this individual (HCO3_1 are NA)
+# lac_1 looks reasonable
+physio$pH_1[physio$pit == 7093028] <- NA
+physio$HCO3_1[physio$pit == 7093028]
+
+#### Define additional columns 
+physio$time_from_capture_to_bs1 <- 
+  physio$time_from_capture_to_surface + physio$time_from_surface_to_bs1
+physio$time_from_surface_to_bs2 <- 
+  physio$time_from_surface_to_bs1 + physio$time_from_bs1_to_bs2
+physio$time_from_capture_to_bs2 <- 
+  physio$time_from_capture_to_surface + physio$time_from_surface_to_bs1 + physio$time_from_bs1_to_bs2
 
 ################################
 ################################
