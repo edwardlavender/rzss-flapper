@@ -83,8 +83,8 @@ physio <-
     be_1 = be_1, 
     be_2 = be_2, 
     # HCO3
-    HCO3_1 = hc03_1,
-    HCO3_2 = hc03_2,
+    HCO3_1 = hc03_2_tc,
+    HCO3_2 = hc03_2_tc,
     # SO2
     SO2_1 = s02_1,
     SO2_2 = s02_2, 
@@ -135,13 +135,6 @@ physio$size_disc  <- round(physio$size_disc)
 physio$size_len   <- round(physio$size_len)
 physio$size_wt    <- round(physio$size_wt)
 
-#### Fix problematic values
-## Skate 7093028 has a problematic PH1 value (extreme alkalinosis)
-# Other related parameters for this individual (HCO3_1 are NA)
-# lac_1 looks reasonable
-physio$pH_1[physio$pit == 7093028] <- NA
-physio$HCO3_1[physio$pit == 7093028]
-
 #### Define additional columns 
 physio$time_from_capture_to_bs1 <- 
   physio$time_from_capture_to_surface + physio$time_from_surface_to_bs1
@@ -149,6 +142,30 @@ physio$time_from_surface_to_bs2 <-
   physio$time_from_surface_to_bs1 + physio$time_from_bs1_to_bs2
 physio$time_from_capture_to_bs2 <- 
   physio$time_from_capture_to_surface + physio$time_from_surface_to_bs1 + physio$time_from_bs1_to_bs2
+
+
+################################
+################################
+#### Quality checks
+
+#### Define full set of response variables
+resps <- c("pH", "pCO2", "pO2", "be", "HCO3", "SO2", "lac", "glu", "K", "Ca", "Mg")
+
+#### Check for outliers 
+# For each response, check a boxplot of the values for BS1 and BS2 to identify outliers
+# ... see analyse_bloods_change. R
+
+#### Fix problematic values
+## Skate 7093028 has a problematic PH1 value (extreme alkalinosis)
+# Other related parameters for this individual (HCO3_1 are NA)
+# lac_1 looks reasonable
+physio$pH_1[physio$pit == 7093028] <- NA
+physio$HCO3_1[physio$pit == 7093028]
+
+#### Check the number of observations for each response
+sapply(resps, function(resp) length(which(!is.na(physio[, paste0(resp, "_1")]))))
+sapply(resps, function(resp) length(which(!is.na(physio[, paste0(resp, "_2")]))))
+
 
 ################################
 ################################
