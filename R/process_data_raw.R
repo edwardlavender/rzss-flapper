@@ -99,7 +99,7 @@ physio <-
     K_2 = k_2,
     # Ca
     Ca_1 = ca_1,
-    ca_2 = ca2,
+    Ca_2 = ca2,
     # Mg
     Mg_1 = mg_1, 
     Mg_2 = mg_2
