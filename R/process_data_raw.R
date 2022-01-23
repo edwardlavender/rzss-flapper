@@ -148,6 +148,12 @@ physio$time_from_capture_to_bs2 <-
 ################################
 #### Quality checks
 
+#### Check for repeated captures
+# 59 captures in total
+nrow(physio)
+# one individual was caught twice (pit: 29241467)
+table(table(physio$pit))
+
 #### Define full set of response variables
 resps <- c("pH", "pCO2", "pO2", "be", "HCO3", "SO2", "lac", "glu", "K", "Ca", "Mg")
 
