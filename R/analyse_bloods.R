@@ -20,6 +20,10 @@ source("./R/define_global_param.R")
 #### Load data
 physio <- readRDS("./data/physio.rds")
 
+#### Define local parameters
+# Define whether or not to save figures
+save <- TRUE
+
 
 ################################
 ################################
@@ -40,8 +44,9 @@ physio <- physio[physio$healthy == 1, ]
 #### Define response(s)
 
 #### Define response variable/sample
+yvar   <- "Mg"
 sample <- "1"
-resp   <- paste0("glu_", sample)
+resp   <- paste0(yvar, "_", sample)
 
 #### Focus on specific columns
 covars <- c("sex", "age", "size_len", 
@@ -95,9 +100,9 @@ if(sample == 1){
 }
 
 #### Model fitting 
-mod_1 <- glm(form_1, data = physior)
-mod_2 <- glm(form_2, data = physior)
-mod_3 <- glm(form_3, data = physior)
+mod_1 <- lm(form_1, data = physior)
+mod_2 <- lm(form_2, data = physior)
+mod_3 <- lm(form_3, data = physior)
 
 #### Model comparison
 ( ranks <- AIC(mod_1, mod_2, mod_3) )
@@ -112,21 +117,56 @@ nrow(physior); nrow(model.frame(mod))
 # summary
 summary(mod)
 # deviance explained
-utils.add::dev_expl(mod)
+# utils.add::dev_expl(mod)
+
+#### Model summary (tidy)
+coef_names <- c("Intercept", 
+                "Sex (M)", 
+                "Time (capture → surface)", 
+                "Time (surface → sample)", 
+                "Length", 
+                "Temperature", 
+                "Gaff (Y)", 
+                "Sex (M): Time (capture → surface)")
+coef_tbl <- utils.add::tidy_coef(coef = coef(summary(mod)), 
+                                 coef_names = coef_names)
+tidy_write(coef_tbl, paste0("./fig/", resp, "_coef.txt"))
 
 #### Model residuals
+if(save) tiff(paste0("./fig/", resp, "_diagnostics.tiff"), 
+              height = 5.5, width = 9, units = "in", res = 600)
 pp <- par(mfrow = c(1, 2))
+# car::qqPlot(mod, line = "none", rep = 1e3)
 plot(mod, 1:2)
 par(pp)
+if(save) dev.off()
 
 #### Model predictions 
-xlabs <- colnames(model.frame(mod))[2:ncol(model.frame(mod))]
-pretty_predictions_1d(mod, 
+## Pretty x axis labels 
+# xlabs <- colnames(model.frame(mod))[2:ncol(model.frame(mod))]
+xlabs <- c("Sex", 
+           expression("Time (hook" %->% "surface) [mins]"), 
+           expression("Time (surface" %->% "BS1) [mins]"), 
+           "Length [cm]", 
+           expression("Temperature [" * degree * "C]"), 
+           "Gaff"
+           )
+if(sample == 2){
+  xlabs[3] <- expression("Time (surface" %->% "BS2) [mins]")
+}
+## Make plot 
+if(save) tiff(paste0("./fig/", resp, ".tiff"), 
+              height = 5.5, width = 9, units = "in", res = 600)
+pp <- par(oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
+pretty_predictions_1d(model = mod, 
                       pretty_axis_args = list(control_digits = 2),
                       add_points = list(cex = 0.5, lwd = 0.5, col = "grey20"),
                       add_error_bars = list(add_fit = list(pch = 21, bg = "black", cex = 2)),
-                      add_xlab = list(text = xlabs, line = 2),
+                      add_xlab = list(text = xlabs, line = 2.25),
+                      add_ylab = list(text = ylabs[[yvar]]),
                       add_main = list(text = LETTERS[1:6], adj = 0, font = 2))
+par(pp)
+if(save) dev.off()
 
 
 #### End of code. 
