@@ -7,7 +7,7 @@
 
 #### Steps preceding this script: 
 # 1) Define global parameters (define_global_param.R)
-# 2) Process raw data         (process_data_raw.R)
+# 2) Process raw bloods       (process_bloods.R)
 
 
 ################################

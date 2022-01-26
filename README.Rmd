@@ -26,16 +26,19 @@ _Figure 1. A flapper skate is released following capture and handing in the Loch
 ## Structure
 
 1.  **`data-raw/`** contains 'raw' data for the project:
-      - `Skate data analysis shared.xlsx` contains raw data collated by G. C. Cole, including the details of capture events and blood parameters. This project is based on the `Data all without formulas` sheet, which details capture events, raw blood parameters and temperature-corrected blood parameter values. The latter are used for analyses in this project. <br/><br/>
+      - `Skate acoustic tagging data .xlsx` contains raw data from capture and tagging, including the details of capture events, blood parameters and heart and respiratory rates during handling, with one individual per sheet. This file is used for heart and respiratory rate analyses in this project. 
+      - `Skate data analysis shared.xlsx` summarises capture events and blood parameters in one place. (This document was collated by G. C. Cole.) The `Data all without formulas` sheet includes capture events, raw blood parameters and temperature-corrected blood parameter values. This sheet is used for the blood parameter analyses in this project. <br/><br/>
       
 2.  **`data/`** contains processed data:
-      - `physio.rds` contains processed data from `process_data_raw.R` (see below). <br/><br/>
+      - `physio.rds` contains processed blood physiology data from `process_bloods.R` (see below). 
+      - `vital.rds` contains processed vital signs data from `process_vitals.R` (see below). <br/><br/>
 
 3.  **`R/`** contains scripts for data processing and analysis:
       - `define_global_param.R` defines global parameters.
-      - `process_data_raw.R` processes raw data.
+      - `process_bloods.R` and `process_vitals.R` process raw data.
       - `analyse_bloods.R` analyses BS1 and BS2.
-      - `analyse_bloods_change.R` analyses the change in blood parameters during handling. <br/><br/>
+      - `analyse_bloods_change.R` analyses the change in blood parameters during handling.
+      - `analyse_vitals.R` analyses heart and respiratory rates during handling. <br/><br/>
       
 4.  **`fig/`** contains tables and figures.
 
@@ -45,9 +48,9 @@ Note that the `data-raw`, `data` and `fig` directories are not provided in the o
 
 1. **Define global parameters** via `define_global_param.R`.
 
-2. **Process raw data** via `process_data_raw.R`.
+2. **Process raw data** via `process_bloods.R` and `process_vitals.R`.
 
-3. **Implement data analysis** via `analyse_bloods.R` and `analyse_bloods_change.R`. 
+3. **Implement data analysis** via `analyse_bloods.R`, `analyse_bloods_change.R` and `analyse_vitals.R`. 
 
 # GitHub packages
 

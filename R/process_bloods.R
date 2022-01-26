@@ -1,10 +1,10 @@
 ################################
 ################################
-#### process_data_raw.R
+#### process_bloods.R
 
 #### This code: 
-# 1) Processes the 'raw' data (physiological measurements),
-# ... for modelling, 
+# 1) Processes the raw physiological blood parameters
+# ... for modelling. 
 
 #### Steps preceding this code:
 # 1) Temperature corrections have been applied to physiological parameters, 
