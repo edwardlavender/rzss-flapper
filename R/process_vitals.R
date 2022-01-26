@@ -244,6 +244,7 @@ range(rates$time_index)
 
 #### Save data
 saveRDS(rates, "./data/rates.rds")
+write.csv(rates, "./data/rates.csv", row.names = FALSE)
 
 #### Write tidy table to file
 rates_tbl <- tidy_numbers(rates, digits = 2)
