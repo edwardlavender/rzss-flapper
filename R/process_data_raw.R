@@ -47,6 +47,7 @@ physio$gaff_uncertain[which(contains_qu(physio$gaff))] <- 1
 physio$gaff <- stringr::str_replace_all(physio$gaff, "\\?", "")
 
 #### Select columns
+# (The list of response variables is defined in define_global_param.R)
 physio <- 
   physio %>% 
   dplyr::select(
@@ -74,20 +75,20 @@ physio <-
     pH_1 = ph1_tc_b,
     pH_2 = ph2_tc_b,
     # pCO2
-    pCO2_1 = pc02_1_tc,
-    pCO2_2 = pc02_2_tc,
+    PCO2_1 = pc02_1_tc,
+    PCO2_2 = pc02_2_tc,
     # pO2
-    pO2_1 = p02_1_tc,
-    pO2_2 = p02_2_tc,
+    PO2_1 = p02_1_tc,
+    PO2_2 = p02_2_tc,
     # BE
-    be_1 = be_1, 
-    be_2 = be_2, 
+    # be_1 = be_1, 
+    # be_2 = be_2, 
     # HCO3
     HCO3_1 = hc03_2_tc,
     HCO3_2 = hc03_2_tc,
     # SO2
-    SO2_1 = s02_1,
-    SO2_2 = s02_2, 
+    # SO2_1 = s02_1,
+    # SO2_2 = s02_2, 
     # Lactate
     lac_1 = lac_1, 
     lac_2 = lac_2, 
@@ -98,8 +99,8 @@ physio <-
     K_1 = k_1, 
     K_2 = k_2,
     # Ca
-    Ca_1 = ca_1,
-    Ca_2 = ca2,
+    # Ca_1 = ca_1,
+    # Ca_2 = ca2,
     # Mg
     Mg_1 = mg_1, 
     Mg_2 = mg_2
@@ -107,10 +108,10 @@ physio <-
   data.frame()
 
 #### Fix symbols in variable values
-# Some variables are recorded with '<'
-physio$be_1 <- stringr::str_replace_all(physio$be_1, "<", NA_character_)
-physio$be_2 <- stringr::str_replace_all(physio$be_2, "<", NA_character_)
-# Check for any ? or < symbols
+## Some variables are recorded with '<'
+# physio$be_1 <- stringr::str_replace_all(physio$be_1, "<", NA_character_)
+# physio$be_2 <- stringr::str_replace_all(physio$be_2, "<", NA_character_)
+## Check for any ? or < symbols
 for(i in 1:ncol(physio)){
   # print(i)
   stopifnot(length(which(contains_qu(physio[, i]))) == 0L)
@@ -154,10 +155,7 @@ nrow(physio)
 # one individual was caught twice (pit: 29241467)
 table(table(physio$pit))
 
-#### Define full set of response variables
-resps <- c("pH", "pCO2", "pO2", "be", "HCO3", "SO2", "lac", "glu", "K", "Ca", "Mg")
-
-#### Check for outliers 
+#### For each response variable, check for outliers 
 # For each response, check a boxplot of the values for BS1 and BS2 to identify outliers
 # ... see analyse_bloods_change. R
 
