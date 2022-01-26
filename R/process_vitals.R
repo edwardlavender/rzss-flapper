@@ -1,9 +1,9 @@
 ################################
 ################################
-#### process_bloods.R
+#### process_vitals.R
 
 #### This code: 
-# 1) Processes the raw physiological blood parameters
+# 1) Processes the vital signs (heart and respiration data)
 # ... for modelling. 
 
 #### Steps preceding this code:
