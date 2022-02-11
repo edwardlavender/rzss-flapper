@@ -7,7 +7,8 @@
 # ... for modelling. 
 
 #### Steps preceding this code:
-# 1) Temperature corrections have been applied to physiological parameters, 
+# 1) Define global parameters (define_global_param.R)
+# 2) Temperature corrections have been applied to physiological parameters, 
 # ... using specific elasmobranch values where available, in the raw data. 
 
 
@@ -19,7 +20,7 @@
 source("./R/define_global_param.R")
 
 #### Read data
-physio <- readxl::read_excel("./data-raw/Skate data analysis shared.xlsx", 
+physio <- readxl::read_excel("./data-raw/skate/Skate data analysis shared.xlsx", 
                              sheet = "Data all without formulas")
 
 
@@ -176,11 +177,12 @@ sapply(resps, function(resp) length(which(!is.na(physio[, paste0(resp, "_2")])))
 #### Save processed data
 
 #### Save data
-saveRDS(physio, "./data/physio.rds")
+saveRDS(physio, "./data/skate/physio.rds")
 
 #### Write tidy table to file
 physio_tbl <- tidy_numbers(physio, digits = 2)
 tidy_write(physio_tbl, "./fig/physio_tbl.txt")
+
 
 #### End of code. 
 ################################

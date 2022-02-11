@@ -7,7 +7,8 @@
 # ... for modelling. 
 
 #### Steps preceding this code:
-# 1) Processing of capture events/blood parameters (process_bloods.R)
+# 1) Define global parameters                      (define_global_param.R)
+# 2) Processing of capture events/blood parameters (process_bloods.R)
 
 
 ################################
@@ -18,10 +19,10 @@
 source("./R/define_global_param.R")
 
 #### Load capture event data
-physio <- readRDS("./data/physio.rds")
+physio <- readRDS("./data/skate/physio.rds")
 
 #### Define local parameters
-con <- "./data-raw/Skate acoustic tagging data .xlsx"
+con <- "./data-raw/skate/Skate acoustic tagging data .xlsx"
 
 #### Define a function to read data
 # The data source is an excel file, with one sheet per individual
@@ -139,6 +140,7 @@ rates$rr <- as.integer(rates$rr)
 #### Fix dates/times 
 range(rates$time, na.rm = TRUE)
 rates$hh_mm_ss <- chron::times(as.numeric(rates$time))
+unique(rates$pit[is.na(rates$hh_mm_ss)])
 rates <- rates[!is.na(rates$hh_mm_ss), ]
 rates$yyyy_mm_dd <- lubridate::dmy(rates$date)
 rates$time_stamp <- as.POSIXct(paste0(rates$yyyy_mm_dd, rates$hh_mm_ss), tz = "UTC")
@@ -159,57 +161,22 @@ rates$time_index[is.na(rates$time_index)] <- 0
 
 #### Add predictors
 ## Add predictors for individuals in physio via matching 
-match_index                        <- match(rates$pit, physio$pit)
+rates$key                          <- paste0(rates$pit, "-", as.Date(rates$time_stamp))
+physio$key                         <- paste0(physio$pit, "-", physio$date)      
+match_index                        <- match(rates$key, physio$key)
 rates$sex                          <- physio$sex[match_index]
 rates$size_len                     <- physio$size_len[match_index]
+rates$size_disc                    <- physio$size_disc[match_index]
 rates$time_from_capture_to_surface <- physio$time_from_capture_to_surface[match_index]
 rates$temp_water                   <- physio$temp_water[match_index]
 rates$gaff                         <- physio$gaff[match_index]
 rates$gaff_uncertain               <- physio$gaff_uncertain[match_index]
 rates$healthy                      <- physio$healthy[match_index]
 ## Add predictors for individuals not in physio manually
-update_rates <- function(data, id, sex, size_, time_, temp_, gaff, gaff_, healthy){
-  pos_id                            <- data$pit == id
-  stopifnot(any(pos_id))
-  data$sex[pos_id]                  <- sex
-  data$size_len                     <- size_
-  data$time_from_capture_to_surface <- time_
-  data$temp_                        <- temp_
-  data$gaff                         <- gaff
-  data$gaff_uncertain               <- gaff_
-  data$healthy                      <- healthy
-}
-# Add data from sheets: "19032020 3" "19032020 2" "19032020 1"
-rates <- 
-  update_rates(data    = rates, 
-               id      = 31199256, 
-               sex     = "F", 
-               size_   = round(213.36), 
-               time_   = 10, 
-               temp_   = 7.2, 
-               gaff    = "Y", 
-               gaff_   = "N",
-               healthy = 1)
-rates <- 
-  update_rates(data    = rates, 
-               id      = 31199492, 
-               sex     = "F", 
-               size_   = round(111.76), 
-               time_   = 12, 
-               temp_   = 7.2, 
-               gaff    = "N", 
-               gaff_   = "N",
-               healthy = 1)
-rates <- 
-  update_rates(data    = rates, 
-               id      = 1972215, 
-               sex     = "F", 
-               size_   = round(172.72), 
-               time_   = 40, 
-               temp_   = 7.2, 
-               gaff    = "Y", 
-               gaff_   = "N",
-               healthy = 1)
+# There are three individuals that are missing from physio:
+# ... "19032020 3" "19032020 2" "19032020 1"
+# ... But we have dropped these already as they are also missing time stamps
+# ... for physiological monitoring. 
 
 #### Tidy columns
 rates <- 
@@ -219,6 +186,7 @@ rates <-
                 pit,
                 sex, 
                 size_len, 
+                size_disc,
                 time_from_capture_to_surface,
                 temp_water, 
                 gaff,
@@ -236,6 +204,7 @@ rates <-
 table(rates$pit)
 range(rates$time_stamp)
 range(rates$time_index)
+pretty_plot(rates$size_len, rates$size_disc)
 
 
 ################################
@@ -243,8 +212,8 @@ range(rates$time_index)
 #### Save processed data
 
 #### Save data
-saveRDS(rates, "./data/rates.rds")
-write.csv(rates, "./data/rates.csv", row.names = FALSE)
+saveRDS(rates, "./data/skate/rates.rds")
+write.csv(rates, "./data/skate/rates.csv", row.names = FALSE)
 
 #### Write tidy table to file
 rates_tbl <- tidy_numbers(rates, digits = 2)

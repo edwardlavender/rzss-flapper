@@ -18,7 +18,7 @@
 source("./R/define_global_param.R")
 
 #### Load data
-physio <- readRDS("./data/physio.rds")
+physio <- readRDS("./data/skate/physio.rds")
 
 #### Define local parameters
 # Define whether or not to save figures

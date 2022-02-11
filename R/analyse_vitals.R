@@ -25,7 +25,7 @@ library(mgcv)
 save <- TRUE
 
 #### Load data 
-rates <- readRDS("./data/rates.rds")
+rates <- readRDS("./data/skate/rates.rds")
 
 
 ################################
