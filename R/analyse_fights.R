@@ -45,7 +45,7 @@ psych::pairs.panels(fights[, c("time_fight",
                                "sun", 
                                "depth", 
                                "healthy"
-)])
+                               )])
 
 
 ################################
@@ -57,7 +57,7 @@ fights <- fights[ind_health_1, ]
 
 #### Fit model(s)
 mod_1 <- 
-  glm(time_fight ~  size_area * current_speed + sex + sun + temp_water + depth,
+  glm(time_fight ~ sex + size_area * current_speed + sun + temp_water + depth,
       data = fights, 
       family = gaussian(link = "log"))
 mod <- mod_1
@@ -72,9 +72,9 @@ utils.add::dev_expl(mod)
 
 #### Model summary (tidy)
 coef_names <- c("Intercept", 
+                "Sex (M)", 
                 "Size", 
                 "Current speed", 
-                "Sex (M)", 
                 "Sun angle", 
                 "Temperature", 
                 "Depth", 
@@ -94,9 +94,9 @@ if(save) dev.off()
 
 #### Model predictions 
 ## Pretty x axis labels 
-xlabs <- c(expression("Surface area [" * m^2 * "]"), 
+xlabs <- c("Sex", 
+           expression("Surface area [" * m^2 * "]"), 
            expression("Current speed [" * ms^-1 * "]"), 
-           "Sex", 
            expression("Sun angle [" * degree * "]"), 
            expression("Temperature [" * degree * "C]"), 
            "Depth [m]"
@@ -106,9 +106,8 @@ if(save) tiff("./fig/fight_time.tiff",
               height = 5.5, width = 9, units = "in", res = 600)
 pp <- par(oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
 pretty_predictions_1d(model = mod, 
-                      pretty_axis_args = list(control_digits = 1),
-                      add_points = list(cex = 0.5, lwd = 0.5, col = "grey20"),
-                      add_error_bars = list(add_fit = list(pch = 21, bg = "black", cex = 2)),
+                      add_points = list(cex = fights$size_area, lwd = 0.5, col = "grey20"),
+                      add_error_bars = list(add_fit = list(pch = 3, lwd = 2), lwd = 2),
                       add_xlab = list(text = xlabs, line = 2.75),
                       add_ylab = list(text = "Fight time [minutes]"),
                       add_main = list(text = LETTERS[1:6], adj = 0, font = 2))
