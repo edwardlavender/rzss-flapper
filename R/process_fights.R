@@ -19,6 +19,9 @@
 #### Wipe workspace and source essential packages and variables
 source("./R/define_global_param.R")
 
+#### Essential packages
+library(lubridate)
+
 #### Load data
 # processed rates/physio data as a source of capture IDs, dates etc.
 rates <- readRDS("./data/skate/rates.rds")
@@ -90,16 +93,38 @@ if(run){
     anchor[, 2] <- anchor[, 2] + 1
     time <- rates_raw[anchor]
     time <- chron::times(as.numeric(time))
+
+    ## Get release time 
+    rates_raw_is_time <- apply(rates_raw, 
+                               2, 
+                               function(x) stringr::str_detect(x, "Time back in water"))
+    anchor <- which(rates_raw_is_time, arr.ind = TRUE)
+    stopifnot(nrow(anchor) >= 1L)
+    anchor <- anchor[1, , drop = FALSE]
+    stopifnot(nrow(anchor) == 1L)
+    anchor[, 2] <- anchor[, 2] + 1
+    time_release <- rates_raw[anchor]
+    time_release <- chron::times(as.numeric(time_release))
     
     ## Define timestamps 
-    time_stamp <- as.POSIXct(paste0(date, time), tz = "UTC")
-    
+    if(!is.na(time)){
+      time_stamp   <- as.POSIXct(paste0(date, time), tz = "UTC")
+    } else {
+      time_stamp <- NA
+    }
+    if(!is.na(time_release)){
+      time_release <- as.POSIXct(paste0(date, time_release), tz = "UTC")
+    } else {
+      time_release <- NA
+    }
+
     ## Return extracted information
-    out <- data.frame(sheet_name  = sheet, 
-                      sheet_index = i,
-                      pit         = pit,
-                      time_stamp  = time_stamp, 
-                      xy_raw      = xy)
+    out <- data.frame(sheet_name   = sheet, 
+                      sheet_index  = i,
+                      pit          = pit,
+                      time_stamp   = time_stamp, 
+                      time_release = time_release,
+                      xy_raw       = xy)
     return(out)
   })
   
@@ -137,14 +162,24 @@ fights$sex <- factor(fights$sex)
 fights$pit <- factor(fights$pit)
 
 #### Summary statistics
-# Number of captures
+## Number of captures
 nrow(fights)
-# Number of individuals 
+## Number of individuals 
 length(levels(fights$pit))
 # One individual (29241467) was caught twice: 
 names(which(table(fights$pit) == 2))
-# Captures occured from "2018-08-01" to "2020-03-20"
+## Captures occurred from "2018-08-01" to "2020-03-20"
 range(as.Date(fights$time_stamp))
+## Proportion of 'healthy' versus 'unhealthy' individuals
+pr_healthy <- table(fights$healthy)
+pr_healthy
+# 0  1 
+# 6 56 
+# ~ 10 (9.677) % of individuals were classed as 'unhealthy'
+pr_healthy[1]/sum(pr_healthy) * 100 
+# 95 % CIS range from 2 % to 17 %:
+utils.add::est_prop(pr_healthy[1], pr_healthy[2])
+# 0.097 [0.022,0.172]
 
 #### Check capture locations 
 # One location appears to be erroneous
@@ -269,6 +304,49 @@ fights$current_speed <- velocities$current_speed[match(fights$key, velocities$ke
 #### Add body (dorsal) surface area
 fights$size_area <- 0.5 * (fights$size_disc/100)^2
 fights <- fights[complete.cases(fights), ]
+
+#### Examine handling time 
+# utils.add::basic_stats(difftime(fights$time_release, fights$time_stamp))
+
+#### Drop records of individuals caught during the processing of another individual
+## Justification 
+# In these circumstances, fight were often held on the bottom, rather than pulling
+# ... them immediately to the surface, so fight times may be positively biased
+# ... and not reflect responses of skate to capture. 
+## Define blank columns and intervals 
+fights$check_1 <- fights$check_2 <- fights$check_3 <- NA
+fights$interval <- lubridate::interval(fights$time_stamp, fights$time_release)
+## Loop over each individual and identify whether or not time on hook occurred
+# ... during the processing of another individual
+for(i in 1:nrow(fights)){
+  # Isolate fights of other individuals
+  fights_of_others <- fights[-i, ]
+  # Check whether time on hook occured during handling intervals
+  # ... Note that this includes if the individual was captured at the moment 
+  # ... of release, which we will account for below. 
+  fights$check_1[i]  <- 
+    any(fights$time_stamp[i] %within% fights_of_others$interval)
+  # Check that the individual was not captured as the individual was released
+  # ... in which case we can include the information from that individual. 
+  fights$check_2[i] <- 
+    all(fights$time_stamp[i] != fights_of_others$time_release) 
+}
+fights$check_3 <- fights$check_1 & fights$check_2
+## Visual check 
+visual_check <- FALSE
+if(visual_check){
+  fights %>% 
+    dplyr::arrange(time_stamp) %>%
+    dplyr::select(pit, time_stamp, time_release, check_1, check_2, check_3) %>%
+    View()
+}
+## The number of excluded records: 
+table(fights$check_3)
+# FALSE  TRUE 
+# 36     6 
+## Exclude fight times for these individuals:
+fights <- fights[!fights$check_3, ]
+nrow(fights) # 36
 
 #### Save processed fights dataframe
 saveRDS(fights, "./data/skate/fights.rds")
