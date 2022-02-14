@@ -170,6 +170,30 @@ length(levels(fights$pit))
 names(which(table(fights$pit) == 2))
 ## Captures occurred from "2018-08-01" to "2020-03-20"
 range(as.Date(fights$time_stamp))
+## Sexes and body sizes 
+table(fights$sex)
+# F  M 
+# 31 30 
+utils.add::basic_stats(fights$size_len, na.rm = TRUE)
+# min   mean median max    sd IQR   MAD
+# 112 177.57    183 229 34.19  51 41.51
+tapply(fights$size_len, factor(fights$sex), utils.add::basic_stats, na.rm = TRUE)
+## Handling time in relation to temperature
+fights$time_handling <- as.integer(difftime(fights$time_release, fights$time_stamp))
+pretty_plot(fights$temp_water,fights$time_handling)
+mod_1 <- glm(time_handling ~ temp_water, 
+             family = gaussian(link = "log"), 
+             data = fights)
+pretty_predictions_1d(mod_1, var = "temp_water")
+list_CIs(predict(mod_1, 
+                 newdata = data.frame(temp_water = c(min(fights$temp_water), max(fights$temp_water))), 
+                 se.fit = TRUE,
+                 type = "response"))
+summary(mod_1)
+pp <- par(mfrow = c(1, 2))
+plot(mod_1, which = 1:2)
+par(pp)
+
 ## Proportion of 'healthy' versus 'unhealthy' individuals
 pr_healthy <- table(fights$healthy)
 pr_healthy
