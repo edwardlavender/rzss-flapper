@@ -258,7 +258,7 @@ velocities <-
   dplyr::bind_rows() %>% 
   dplyr::mutate(cs = sqrt(u^2 + v^2)) %>%
   dplyr::group_by(date_name, mesh_ID) %>%
-  dplyr::mutate(current_speed = sum(cs)) %>%
+  dplyr::mutate(current_speed = mean(cs)) %>%
   dplyr::slice(1L)
 
 #### Add current speed metric to fights dataframe
