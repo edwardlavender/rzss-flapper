@@ -18,6 +18,9 @@
 #### Wipe workspace and source essential packages and variables
 source("./R/define_global_param.R")
 
+#### Essential packages
+library(ggplot2)
+
 #### Load capture event data
 physio <- readRDS("./data/skate/physio.rds")
 
@@ -93,6 +96,9 @@ rates <-
                 rr = RR
                 )
 
+#### Define event IDs
+rates$event_id <- as.integer(factor(rates$sheet_name))
+
 #### Fix pit names
 ## Fix .. in PIT names 
 pos <- substr(rates$pit, 1, 2) == ".."
@@ -100,13 +106,12 @@ rates$pit[pos] <- substr(rates$pit[pos], 3, nchar(rates$pit[pos]))
 rates$pit[rates$pit == "982..000407092918"] <- 407092918
 rates$pit[which(stringi::stri_detect_fixed(rates$pit, ".."))]
 ## Check for pit IDs not in physio
+# The raw data show these individuals are missing from physio due to istat failures.
 unique(rates$pit[!(rates$pit %in% physio$pit)])
 # "31199256" "31199492" "1972215"
 unique(rates$sheet_name[!(rates$pit %in% physio$pit)])
 # "19032020 3" "19032020 2" "19032020 1"
 data.frame(rates[!(rates$pit %in% physio$pit), ])
-# The raw data show these individuals are missing from physio due to istat failures. 
-
 ## Make pit factor
 rates$pit <- factor(rates$pit)
 table(rates$pit)
@@ -121,10 +126,8 @@ unique(rates$hr)
 # ... IDs:    "10991061",   "7093359",    "7092902"
 # ... We will exclude their data for HR. 
 doubles_pos   <- which(rates$hr %in% c("double?", "Double?"))
-doubles_pit   <- rates$pit[doubles_pos]
-doubles_date  <- rates$date[doubles_pos]
-doubles_sheet <- rates$sheet_name[doubles_pos]
-rates$doubles <- (rates$pit %in% doubles_pit) & (rates$date %in% doubles_date)
+doubles_evt   <- rates$event_id[doubles_pos]
+rates$doubles <- rates$event_id %in% doubles_evt
 rates$hr[rates$doubles] <- NA
 rates$doubles <- NULL
 # Force integer specification for HR
@@ -149,15 +152,19 @@ range(rates$time_stamp, na.rm = TRUE)
 #### Define universal time index
 rates <- 
   rates %>%
-  dplyr::group_by(pit, yyyy_mm_dd) %>%
-  dplyr::arrange(time_stamp) %>%
-  dplyr::mutate(time_index = 
+  dplyr::arrange(event_id, time_stamp) %>%
+  dplyr::group_by(event_id) %>%
+  dplyr::mutate(event_index = dplyr::row_number(), 
+                time_index = 
                   as.numeric(
-                    difftime(time_stamp, dplyr::lag(time_stamp), units = "mins")
+                    difftime(time_stamp, time_stamp[1], units = "mins")
                     )
                 ) %>%
   dplyr::ungroup()
-rates$time_index[is.na(rates$time_index)] <- 0
+# Visual check
+ggplot() + 
+  geom_point(aes(time_index, event_index), data = rates) + 
+  facet_wrap(~event_id)
 
 #### Add predictors
 ## Add predictors for individuals in physio via matching 
