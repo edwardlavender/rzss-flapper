@@ -59,6 +59,13 @@ if(run){
                                     col_names = TRUE)
     rates_raw <- as.matrix(rates_raw)
     
+    ## Get IDs
+    # Extract raw PIT code
+    pit   <- as.character(rates_raw[9, 2])
+    # Fix code errors
+    if(substr(pit, 1, 2) == "..") pit <- substr(pit, 3, nchar(pit))
+    if(pit == "982..000407092918") pit <- "407092918"
+      
     ## Get locations 
     rates_raw_is_loc <- apply(rates_raw, 
                               2, 
@@ -88,10 +95,11 @@ if(run){
     time_stamp <- as.POSIXct(paste0(date, time), tz = "UTC")
     
     ## Return extracted information
-    out <- data.frame(sheet_name = sheet, 
+    out <- data.frame(sheet_name  = sheet, 
                       sheet_index = i,
-                      time_stamp = time_stamp, 
-                      xy_raw = xy)
+                      pit         = pit,
+                      time_stamp  = time_stamp, 
+                      xy_raw      = xy)
     return(out)
   })
   
@@ -104,6 +112,7 @@ if(run){
   fights$time_fight  <- rates$time_from_capture_to_surface[match_index]
   fights$temp_water  <- rates$temp_water[match_index]
   fights$healthy     <- rates$healthy[match_index]
+  unique(fights$pit)
   
   #### Write raw captures to file for manual processing
   # Covariates need to be added manually for 
@@ -125,6 +134,17 @@ fights <- readxl::read_excel("./data-raw/skate/captures.xlsx", sheet = "data")
 #### Define column classes
 str(fights)
 fights$sex <- factor(fights$sex)
+fights$pit <- factor(fights$pit)
+
+#### Summary statistics
+# Number of captures
+nrow(fights)
+# Number of individuals 
+length(levels(fights$pit))
+# One individual (29241467) was caught twice: 
+names(which(table(fights$pit) == 2))
+# Captures occured from "2018-08-01" to "2020-03-20"
+range(as.Date(fights$time_stamp))
 
 #### Check capture locations 
 # One location appears to be erroneous
@@ -142,6 +162,12 @@ fights        <- fights[complete.cases(fights), ]
 pretty_map(coast, 
            add_polys = list(x = coast), 
            add_points = list(x = fights$lon, y = fights$lat, col = "red"))
+
+#### Save locations .csv for mapping in QGIS
+write.csv(fights[, c("lon", "lat")], 
+          "./data/skate/rzss_capture_fight_locations.csv",
+          quote = FALSE,
+          row.names = FALSE)
 
 #### Add depths 
 fights$depth <- abs(raster::extract(digi, fights[, c("lon", "lat")]))
