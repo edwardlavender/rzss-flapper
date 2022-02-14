@@ -165,10 +165,6 @@ rates <-
 ggplot() + 
   geom_point(aes(time_index, event_index), data = rates) + 
   facet_wrap(~event_id)
-<<<<<<< HEAD
-=======
-  
->>>>>>> 33d2b3f403f1dfda34ce63782f43353936f29056
 
 #### Add predictors
 ## Add predictors for individuals in physio via matching 
