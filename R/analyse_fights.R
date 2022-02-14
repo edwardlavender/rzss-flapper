@@ -35,6 +35,7 @@ ind_health_1 <- fights$healthy == 1
 
 #### Summary statistics 
 # table(fights$pit)
+utils.add::basic_stats(fights$time_fight)
 pretty_boxplot(fights$sex, fights$size_area)
 utils.add::basic_stats(fights$time_fight, na.rm = TRUE)
 pretty_hist(fights$time_fight)
