@@ -188,7 +188,8 @@ rates$healthy                      <- physio$healthy[match_index]
 #### Tidy columns
 rates <- 
   rates %>%
-  dplyr::select(sheet_index, 
+  dplyr::select(event_id, 
+                sheet_index, 
                 sheet_name, 
                 pit,
                 sex, 
