@@ -73,7 +73,7 @@ utils.add::dev_expl(mod)
 
 #### Model summary (tidy)
 coef_names <- c("Intercept", 
-                "Sex (M)", 
+                "SexM", 
                 "Size", 
                 "Current speed", 
                 "Sun angle", 
@@ -81,7 +81,8 @@ coef_names <- c("Intercept",
                 "Depth", 
                 "Size: Current speed")
 coef_tbl <- utils.add::tidy_coef(coef = coef(summary(mod)), 
-                                 coef_names = coef_names)
+                                 coef_names = coef_names, 
+                                 col_names = c("Coefficient", "Estimate", "SE", "t-value", "p-value"))
 tidy_write(coef_tbl, "./fig/fight_time_coef.txt")
 
 #### Model residuals
