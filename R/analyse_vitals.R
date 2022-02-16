@@ -34,6 +34,8 @@ rates <- readRDS("./data/skate/rates.rds")
 #### Data processing
 
 #### Order by time_index
+rates$event_id_int <- rates$event_id
+rates$event_id     <- factor(rates$event_id)
 rates <- 
   rates %>% 
   dplyr::arrange(event_id, time_index) %>%
@@ -51,8 +53,14 @@ rates <-
 
 #### Summary statistics 
 length(unique(rates$pit))
+length(which(!is.na(rates$hr)))
 utils.add::basic_stats(rates$hr, na.rm = TRUE)
+length(which(!is.na(rates$rr)))
 utils.add::basic_stats(rates$rr, na.rm = TRUE)
+ind_cor <- !is.na(rates$hr) & !is.na(rates$rr)
+length(which(ind_cor))
+h <- cor.test(rates$hr[ind_cor], rates$rr[ind_cor], method = "spearman")
+# 0.5280126
 
 #### Correlations 
 # Note the relatively high (negative) correlation 
@@ -68,13 +76,15 @@ psych::pairs.panels(rates[, c("hr", "rr",
                               )])
 
 #### Define response variable
-resp <- "rr" # "hr"
+resp <- "hr" # "hr"
 rates$resp <- rates[, resp]
-rates_for_resp <- rates[, c("event_id", "resp", 
+rates_for_resp <- rates[, c("event_id_int", "event_id", 
+                            "resp", 
                             "sex", "size_len", 
                             "time_from_capture_to_surface", "temp_water", 
                             "gaff", "time_index")]
 rates_for_resp <- rates_for_resp[complete.cases(rates_for_resp), ]
+rates_for_resp$event_id <- factor(rates_for_resp$event_id)
 if(resp == "rr"){
   ylab <- "Respiratory rate [bpm]"
 } else if(resp == "hr"){
@@ -94,15 +104,17 @@ cor(rates_for_time_1$time_from_capture_to_surface, rates_for_time_1$size_len)
 
 #### Capture events and body size
 # Are capture events uniquely defined by size? 
-# ... 28-29 individuals are uniquely defined by their size
-# ... ~8 pairs of individuals share the same size
-# ... ~2 trios of individuals share the same size
+# ... 28-29 events are uniquely defined by their size
+# ... ~8 pairs of events share the same size
+# ... ~2 trios of events share the same size
 rates_for_resp %>%
   dplyr::group_by(event_id) %>% 
   dplyr::slice(1L) %>%
   dplyr::pull(size_len) %>%
   table() %>% 
-  table()
+  table() %>% 
+  as.numeric()/length(unique(rates_for_resp$size_len))
+# For both variables, 74 % of events are uniquely defined by their size 
 
 #### Period of observations
 # There are only few observations after more than 20 minutes
@@ -117,24 +129,29 @@ ggplot() +
 ################################
 #### Modelling 
 
+################################
+#### Model fitting 
+
 #### Implement model(s)
-rates$event_id <- factor(rates$event_id)
 mod_1 <- gam(resp ~ 
-                sex + size_len + time_from_capture_to_surface + 
-                temp_water + 
-                gaff + 
-                s(event_id, bs = "re") +
-                s(event_id, time_index, bs = "re"),
-              family = nb(),
-              data = rates)
+               sex + size_len + temp_water * time_from_capture_to_surface + 
+               gaff + 
+               s(event_id, bs = "re") +
+               s(event_id, time_index, bs = "re"),
+             family = nb(),
+             data = rates_for_resp, 
+             method = "REML")
 mod_2 <- gam(resp ~ 
-                sex + time_from_capture_to_surface + 
-                temp_water + 
-                gaff + 
+               sex + temp_water * time_from_capture_to_surface + 
+               gaff + 
                te(size_len, time_index),
-              family = nb(),
-              data = rates, 
-              method = "REML")
+             family = nb(),
+             data = rates_for_resp, 
+             method = "REML")
+
+
+################################
+#### Model comparison and summary   
 
 #### Model comparison
 ( ranks <- AIC(mod_1, mod_2) )
@@ -142,34 +159,167 @@ message(round(max(ranks$AIC) - min(ranks$AIC), digits = 2))
 message(rownames(ranks)[which.min(ranks$AIC)])
 mod <- get(rownames(ranks)[which.min(ranks$AIC)])
 mod <- mod_1
+# hr: delta AIC = 17.5
+# rr: delta AIC = 113.36
 
 #### Model summary
-summary(mod)
+summary(mod, digits = 3)
+con <- paste0("./fig/", resp, "_coef.txt")
+sink(con)
+summary(mod, digits = 3)
+sink()
 
-#### Model smooths
+
+################################
+#### Model predictions 
+
+#### Model smooths 
 plot(mod, all.terms = TRUE, pages = 1, scheme = 1)
 
-#### Model predictions
+#### Estimate the difference in vital rates for the smallest versus largest female 
+ind_f <- rates_for_resp$sex == "F"
+predict(mod, 
+        newdata = data.frame(sex = factor("F", levels = c("F", "M")), 
+                             size_len = c(min(rates_for_resp$size_len[ind_f]), 
+                                          max(rates_for_resp$size_len[ind_f])),
+                             time_from_capture_to_surface = median(rates_for_resp$time_from_capture_to_surface), 
+                             temp_water = median(rates_for_resp$temp_water), 
+                             gaff = factor("N", levels = c("N", "Y")), 
+                             event_id = factor(levels(rates_for_resp$event_id)[1], 
+                                               levels = levels(rates_for_resp$event_id)),
+                             time_index = min(rates_for_resp$time_index)),
+        type = "response",
+        se.fit = TRUE)
+
+#### Visualise model predictions for each variable 
+
+## Set up figure to save
+if(save) tiff(paste0("./fig/", resp, ".tiff"), 
+              height = 5.5, width = 9, units = "in", res = 600)
+pp <- par(mfrow = c(2, 3), oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
+rates_in_mod <- model.frame(mod)
+
+## Define titles
 xlabs <- c("Sex", 
            "Length [cm]", 
-           expression("Time (hook" %->% "surface) [mins]"), 
            expression("Temperature [" * degree * "C]"), 
+           expression("Time (hook" %->% "surface) [mins]"), 
            "Gaff", 
            "Time on deck [mins]"
            )
-if(save) tiff(paste0("./fig/", resp, ".tiff"), 
-              height = 5.5, width = 9, units = "in", res = 600)
-pp <- par(oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
-rates_in_mod <- model.frame(mod)
-rates_in_mod$cols <- c("royalblue", "black")[rates_in_mod$sex]
+xlab_line = 2.25
+main_adj  <- 0
+main_font <- 2
+
+## Define point colours, shapes and sizes
+col_param <- pretty_cols_brewer(zlim = range(rates_in_mod$temp_water), 
+                   scheme = "RdYlBu"
+                   )
+col_param$col <- scales::alpha(col_param$col, 0.5)
+rates_in_mod$pt_col <- col_param$col[findInterval(rates_in_mod$temp_water, col_param$breaks)]
+# rates_in_mod$pt_col <- c("royalblue", "black")[rates_in_mod$sex]
+rates_in_mod$pt_cex <- rates_in_mod$size_len/225
+rates_in_mod$pt_pch <- 21 # c(1, 4)[rates_in_mod$sex]
+pt_param <- list(col = rates_in_mod$pt_col, 
+                 cex = rates_in_mod$pt_cex, 
+                 pch = rates_in_mod$pt_pch)
+
+## Plot predictions for sex
 pretty_predictions_1d(model = mod, 
-                      x_var = c("sex", "size_len", "time_from_capture_to_surface", 
-                              "temp_water", "gaff", "time_index"),
-                      add_points = list(cex = rates_in_mod$size_len/200, lwd = 0.5, col = rates_in_mod$col),
-                      add_error_bars = list(add_fit = list(pch = 21, bg = "black", cex = 2)),
-                      add_xlab = list(text = xlabs, line = 2.25),
-                      add_ylab = list(text = ylab),
-                      add_main = list(text = LETTERS[1:6], adj = 0, font = 2))
+                      x_var = c("sex", "size_len"),
+                      add_xlab = list(text = xlabs[1:2], line = xlab_line),
+                      add_ylab = NULL,
+                      add_main = list(text = c("A", "B"), adj = main_adj, font = main_font),
+                      add_error_bars = ebars_param,
+                      add_points = pt_param, 
+                      one_page = FALSE
+                      )
+
+## Plot predictions for temperature (by fight time)
+# Define prediction data 
+p_n <- 100
+p_x <- seq(min(rates_for_resp$temp_water), 
+           max(rates_for_resp$temp_water), 
+           length.out = p_n)
+p_d <- data.frame(temp_water = p_x)
+p_d$time_from_capture_to_surface <- min(rates_for_resp$time_from_capture_to_surface)
+p_d$sex        <- factor("F", levels = c("F", "M"))
+p_d$size_len   <- mean(rates_for_resp$size_len)
+p_d$gaff       <- factor("N", levels = c("N", "F"))
+p_d$event_id   <- factor(levels(rates_for_resp$event_id)[1], levels = levels(rates_for_resp$event_id))
+p_d$time_index <- 1
+# Plot predictions for effects of temperature when fight time is low 
+pretty_predictions_1d(model = mod, 
+                      newdata = p_d[p_d$time_from_capture_to_surface == min(rates_for_resp$time_from_capture_to_surface), ],
+                      x_var = "temp_water",
+                      add_points = NULL,
+                      add_error_envelope = 
+                        list(add_fit = list(col = "royalblue"), 
+                             add_ci = list(col = scales::alpha("skyblue", 0.2), border = FALSE)),
+                      add_xlab = list(text = xlabs[3], line = xlab_line), 
+                      add_ylab = NULL, 
+                      add_main = list(text = "C", adj = main_adj, font = main_font)
+                      )
+# Add predictions for effects of temperature when fight time is high 
+p_d$time_from_capture_to_surface <- max(rates_for_resp$time_from_capture_to_surface)
+p_ci <- list_CIs(predict(mod, p_d, se.fit = TRUE, type = "response"))
+add_error_envelope(p_d$temp_water, 
+                   p_ci, 
+                   add_fit = list(col = "darkred"),
+                   add_ci = list(col = scales::alpha("red", 0.2), border = FALSE)
+)
+add_pt <- pt_param
+add_pt$x <- rates_for_resp$temp_water
+add_pt$y <- rates_for_resp$resp
+do.call(points, add_pt)
+
+## Plot predictions for fight time (by temperature)
+# Define prediction data 
+p_n <- 100
+p_x <- seq(min(rates_for_resp$time_from_capture_to_surface), 
+           max(rates_for_resp$time_from_capture_to_surface), 
+           length.out = p_n)
+p_d            <- data.frame(time_from_capture_to_surface = p_x)
+p_d$temp_water <- min(rates_for_resp$temp_water)
+p_d$sex        <- factor("F", levels = c("F", "M"))
+p_d$size_len   <- mean(rates_for_resp$size_len)
+p_d$gaff       <- factor("N", levels = c("N", "F"))
+p_d$event_id   <- factor(levels(rates_for_resp$event_id)[1], levels = levels(rates_for_resp$event_id))
+p_d$time_index <- 1
+# Plot predictions for effects of fight time in low temperatures 
+pretty_predictions_1d(model = mod, 
+                      newdata = p_d[p_d$temp_water == min(rates_for_resp$temp_water), ],
+                      x_var = "time_from_capture_to_surface",
+                      add_points = NULL,
+                      add_error_envelope = 
+                        list(add_fit = list(col = "royalblue"), 
+                             add_ci = list(col = scales::alpha("skyblue", 0.2), border = FALSE)),
+                      add_xlab = list(text = xlabs[4], line = xlab_line), 
+                      add_ylab = NULL, 
+                      add_main = list(text = "D", adj = main_adj, font = main_font)
+                      )
+# Add predictions for effects of fight time in warm temperatures
+p_d$temp_water <- max(rates_for_resp$temp_water)
+p_ci <- list_CIs(predict(mod, p_d, se.fit = TRUE, type = "response"))
+add_error_envelope(p_d$time_from_capture_to_surface, 
+                   p_ci, 
+                   add_fit = list(col = "darkred"),
+                   add_ci = list(col = scales::alpha("red", 0.2), border = FALSE)
+                   )
+add_pt <- pt_param
+add_pt$x <- rates_for_resp$time_from_capture_to_surface
+add_pt$y <- rates_for_resp$resp
+do.call(points, add_pt)
+
+## Plot predictions for GAFF and handling time 
+pretty_predictions_1d(model = mod, 
+                      x_var =  c("gaff", "time_index"),
+                      add_error_bars = ebars_param,
+                      add_points = pt_param,
+                      add_xlab = list(text = xlabs[5:6], line = xlab_line),
+                      add_ylab = NULL,
+                      add_main = list(text = c("E", "F"), adj = main_adj, font = main_font), 
+                      one_page = FALSE)
 par(pp)
 if(save) dev.off()
 
@@ -247,18 +397,22 @@ lapply(1:length(rates_for_resp_by_event), function(i){
   # axis_ls[[4]]$axis$lwd.tick <- 0
   do.call(graphics::axis, axis_ls[[2]]$axis)
   do.call(graphics::axis, axis_ls[[4]]$axis)
-  mtext(side = 3, text = paste0("[", rate$event_id, "]"), line = -2, font = 2)
+  mtext(side = 3, text = paste0("[", rate$event_id_int, "]"), line = -2, font = main_font)
 }) %>% invisible()
 mtext(side = 1, "Time on deck [mins]", line = 4, outer = TRUE, cex = 1.5)
 mtext(side = 2, ylab, line = 4, outer = TRUE, cex = 1.5)
 par(pp)
 dev.off()
 
+
+################################
 #### Model diagnostics
+
+#### Standard residual diagnostics
 if(save) png(paste0("./fig/", resp, "_diag.png"), 
              height = 12, width = 12, units = "in", res = 800)
 pp <- par(mfrow = c(2, 2))
-gam.check(mod_1, rep = 1000, type = "deviance")
+gam.check(mod, rep = 1000, type = "deviance")
 par(pp)
 if(save) dev.off()
 

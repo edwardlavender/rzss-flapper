@@ -55,6 +55,11 @@ if(ylabs_check){
   par(pp)
 }
 
+#### Define graphical parameters for error bars
+ebars_lwd   <- 2
+ebars_param <- list(add_fit = list(pch = 3, bg = "black", cex = 2, lwd = ebars_lwd), 
+                    lwd = ebars_lwd)
+
 
 
 #### End of code. 
