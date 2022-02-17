@@ -24,7 +24,8 @@ library(lubridate)
 
 #### Load data
 # processed rates/physio data as a source of capture IDs, dates etc.
-rates <- readRDS("./data/skate/rates.rds")
+rates  <- readRDS("./data/skate/rates.rds")
+physio <- readRDS("./data/skate/physio.rds")
 # coast data for checking location accuracy
 coast <- readRDS("./data/spatial/coast/coast.rds")
 # WeStCOMS mesh for deriving current speeds
@@ -82,29 +83,21 @@ if(run){
     date  <- substr(sheet, 1, 8) 
     date  <- lubridate::dmy(date)
     
-    ## Get time on hook
-    rates_raw_is_time <- apply(rates_raw, 
-                               2, 
-                               function(x) stringr::str_detect(x, "Time on hook"))
-    anchor <- which(rates_raw_is_time, arr.ind = TRUE)
-    stopifnot(nrow(anchor) >= 1L)
-    anchor <- anchor[1, , drop = FALSE]
-    stopifnot(nrow(anchor) == 1L)
-    anchor[, 2] <- anchor[, 2] + 1
-    time <- rates_raw[anchor]
-    time <- chron::times(as.numeric(time))
-
-    ## Get release time 
-    rates_raw_is_time <- apply(rates_raw, 
-                               2, 
-                               function(x) stringr::str_detect(x, "Time back in water"))
-    anchor <- which(rates_raw_is_time, arr.ind = TRUE)
-    stopifnot(nrow(anchor) >= 1L)
-    anchor <- anchor[1, , drop = FALSE]
-    stopifnot(nrow(anchor) == 1L)
-    anchor[, 2] <- anchor[, 2] + 1
-    time_release <- rates_raw[anchor]
-    time_release <- chron::times(as.numeric(time_release))
+    ## Get times
+    # We will get time at surface/release
+    # There are issues with the other times recorded in the raw data
+    # time on hook
+    time         <- get_time(rates_raw, "Time on hook")
+    # time at surface
+    # time_surface <- get_time(rates_raw, "Time at boat side")
+    # time on deck
+    # time_deck    <- get_time(rates_raw, "Time on deck")
+    # time of BS1
+    # time_bs1     <- get_time(rates_raw, "Time blood sample 1")
+    # time of BS2
+    # time_bs2     <- get_time(rates_raw, "Time blood sample 2")
+    # release time 
+    time_release <- get_time(rates_raw, "Time back in water")
     
     ## Define timestamps 
     if(!is.na(time)){
@@ -112,6 +105,28 @@ if(run){
     } else {
       time_stamp <- NA
     }
+    '
+    if(!is.na(time_surface)){
+      time_surface   <- as.POSIXct(paste0(date, time_surface), tz = "UTC")
+    } else {
+      time_surface <- NA
+    }
+    if(!is.na(time_deck)){
+      time_deck   <- as.POSIXct(paste0(date, time_deck), tz = "UTC")
+    } else {
+      time_deck <- NA
+    }
+    if(!is.na(time_bs1)){
+      time_bs1   <- as.POSIXct(paste0(date, time_bs1), tz = "UTC")
+    } else {
+      time_bs1 <- NA
+    }
+    if(!is.na(time_bs2)){
+      time_bs2   <- as.POSIXct(paste0(date, time_bs2), tz = "UTC")
+    } else {
+      time_bs2 <- NA
+    }
+    '
     if(!is.na(time_release)){
       time_release <- as.POSIXct(paste0(date, time_release), tz = "UTC")
     } else {
@@ -123,6 +138,11 @@ if(run){
                       sheet_index  = i,
                       pit          = pit,
                       time_stamp   = time_stamp, 
+                      # time_hook    = time_stamp,
+                      # time_surface = time_surface,
+                      # time_deck    = time_deck,
+                      # time_bs1     = time_bs1, 
+                      # time_bs2     = time_bs2,
                       time_release = time_release,
                       xy_raw       = xy)
     return(out)
@@ -151,10 +171,11 @@ if(run){
 
 
 ################################
-#### Process skeleton dataframe 
+#### Examine skeleton dataframe 
 
 #### Read skeleton captures dataframe
 fights <- readxl::read_excel("./data-raw/skate/captures.xlsx", sheet = "data")
+fights$event_id <- 1:nrow(fights)
 
 #### Define column classes
 str(fights)
@@ -211,6 +232,102 @@ pretty_map(add_polys = list(x = coast))
 text(x = fights$lon, y = fights$lat, 
      labels = fights$sheet_name, col = "red", cex = 0.5)
 fights$lon[fights$sheet_name == "22082018 5"] <- NA
+
+#### Define capture locations in BNG 
+bng <- "+init=epsg:27700"
+pos <- !is.na(fights$lon) & !is.na(fights$lat)
+xy  <- sp::SpatialPointsDataFrame(fights[pos, c("lon", "lat")], 
+                                  data = fights[pos, ],
+                                  proj4string = wgs84)
+xy <- sp::spTransform(xy, bng)
+xy <- sp::coordinates(xy)
+fights$easting  <- NA
+fights$northing <- NA
+fights$easting[pos]  <- xy[, 1]
+fights$northing[pos] <- xy[, 2]
+
+#### Add surgery and blood parameter values for each event 
+fights$key <- paste0(fights$pit, as.Date(fights$time_stamp))
+physio$key <- paste0(physio$pit, physio$date)
+resps_1 <- paste0(resps, "_1")
+resps_2 <- paste0(resps, "_2")
+for(i in 1:length(resps)){
+  fights[, resps_1[i]] <- physio[, resps_1[i]][match(fights$key, physio$key)]
+  fights[, resps_2[i]] <- physio[, resps_2[i]][match(fights$key, physio$key)]
+}
+fights$K_haem <- physio$K_haem[match(fights$key, physio$key)]
+table(fights$K_haem)
+which(fights$K_haem == 1)
+fights$tag <- physio$surgery[match(fights$key, physio$key)]
+fights$tag[is.na(fights$tag)] <- 0
+fights$tag <- factor(fights$tag)
+table(fights$tag)
+
+#### Add the average heart/respiratory rate for each event 
+fights$hr <- NA
+fights$rr <- NA
+for(i in 1:nrow(fights)){
+  if(fights$event_id[i] %in% rates$event_id){
+    fights$event_id[i] %in% rates$event_id
+    rates_for_event <- rates[rates$event_id == fights$event_id[i], ]
+    fights$hr[i] <- median(rates_for_event$hr, na.rm = TRUE)
+    fights$rr[i] <- median(rates_for_event$rr, na.rm = TRUE)
+  }
+}
+
+#### Tidy table
+## Fix DP
+fights_tbl <- data.frame(fights)
+dp_1 <- function(x) add_lagging_point_zero(plyr::round_any(x, 0.1), n = 1)
+dp_2 <- function(x) add_lagging_point_zero(plyr::round_any(x, 0.01), n = 2)
+for(i in 1:length(resps)){
+  fights_tbl[, resps_1[i]] <- dp_2(fights_tbl[, resps_1[i]])
+  fights_tbl[, resps_2[i]] <- dp_2(fights_tbl[, resps_2[i]])
+}
+fights_tbl <- 
+  fights_tbl %>%
+  dplyr::mutate(date = format(as.Date(time_stamp), "%y-%m-%d"), 
+                easting = dp_1(easting), 
+                northing = dp_1(northing)
+                ) 
+## Define table with individual characteristics 
+fights_tbl_1 <- 
+fights_tbl %>%
+  dplyr::select(ID         = event_id, 
+                Date       = date, 
+                Easting    = easting, 
+                Northing   = northing,
+                PIT        = pit,
+                Sex        = sex, 
+                TL         = size_len, 
+                DW         = size_disc, 
+                Tag        = tag
+  )
+## Define blood parameters 
+fights_tbl_2 <- 
+  fights_tbl %>%
+  dplyr::select(
+    ID         = event_id,
+    `pH (1)`   = pH_1,
+    `PCO2 (1)` = PCO2_1, 
+    `PO2 (1)`  = PO2_1, 
+    `HCO3 (1)` = HCO3_1, 
+    `Lac (1)`  = lac_1, 
+    `Glu (1)`  = glu_1, 
+    `K (1)`    = K_1, 
+    `Mg (1)`   = Mg_1, 
+    `pH (2)`   = pH_2,
+    `PCO2 (2)` = PCO2_2, 
+    `PO2 (2)`  = PO2_2, 
+    `HCO3 (2)` = HCO3_2, 
+    `Lac (2)`  = lac_2, 
+    `Glu (2)`  = glu_2, 
+    `K (2)`    = K_2, 
+    `Mg (2)`   = Mg_2, 
+    HR         = hr, 
+    RR         = rr)
+tidy_write(fights_tbl_1, "./fig/fights_tbl_1.txt")
+tidy_write(fights_tbl_2, "./fig/fights_tbl_2.txt")
 
 #### Select columns
 fights$xy_raw <- NULL
