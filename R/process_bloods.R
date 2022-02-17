@@ -56,6 +56,7 @@ physio <-
     date = date, 
     pit = pit, 
     vemco = vemco, 
+    surgery = surgery,
     sex = sex, 
     age = age, 
     age_uncertain = age_uncertain,
@@ -99,6 +100,7 @@ physio <-
     # K
     K_1 = k_1, 
     K_2 = k_2,
+    K_haem = sample_quality_k2, 
     # Ca
     # Ca_1 = ca_1,
     # Ca_2 = ca2,
@@ -125,12 +127,16 @@ physio$date                       <- as.Date(physio$date, origin = "1899-12-30")
 physio$pit                        <- factor(physio$pit)
 physio$vemco[physio$vemco == "N"] <- NA
 physio$vemco                      <- factor(physio$vemco)
+physio$surgery                    <- factor(physio$surgery)
 physio$age                        <- factor(physio$age)
 physio$age_uncertain              <- factor(physio$age_uncertain)
 physio$sex                        <- factor(physio$sex)
 physio$gaff                       <- factor(physio$gaff)
 physio$gaff_uncertain             <- factor(physio$gaff_uncertain)
 physio$healthy                    <- factor(physio$healthy)
+physio$K_haem[is.na(physio$K_haem)] <- 0
+physio$K_haem[physio$K_haem == "H"] <- 1
+physio$K_haem                     <- factor(physio$K_haem)
 
 #### Fix variable precision
 physio$size_disc  <- round(physio$size_disc)
@@ -166,6 +172,10 @@ table(table(physio$pit))
 # lac_1 looks reasonable
 physio$pH_1[physio$pit == 7093028] <- NA
 physio$HCO3_1[physio$pit == 7093028]
+## Skate 10991061 has a problematic (raw) PCO2_2 value which 
+# ... is less than the reading value of the machine
+# ... This has already been set to NA in the raw data. 
+physio$PCO2_2[physio$pit == "10991061"]
 
 #### Check the number of observations for each response
 sapply(resps, function(resp) length(which(!is.na(physio[, paste0(resp, "_1")]))))
