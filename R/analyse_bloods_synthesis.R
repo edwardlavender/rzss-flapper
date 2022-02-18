@@ -31,7 +31,7 @@ physio <- readRDS("./data/skate/physio.rds")
 #### Set up simulations 
 
 #### Define blood sample ("1" or "2") and response variables
-sample <- "1"
+sample <- "2"
 if(sample == "1"){
   resps_for_bs <- paste0(resps, "_1")
 } else if(sample == "2"){
@@ -125,7 +125,7 @@ if(sample == 2){
 
 #### Implement simulations 
 # [with R = 1e3 simulations, this takes 2 mins one one core]
-run <- TRUE
+run <- FALSE
 if(run){
   R <- 1e3
   outsims <- 
@@ -267,7 +267,7 @@ pretty_axis(axis_ls = axis_ls, add = TRUE)
 
 #### Add legend
 px <- par(xpd = NA)
-if(sample == "1") ypos <- -5 else ypos <- -10
+if(sample == "1") ypos <- -5 else ypos <- -2.5
 legend(70, ypos,
        lty = rep(1, length(comparisons)), 
        col = cols, 
