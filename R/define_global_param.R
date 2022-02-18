@@ -48,7 +48,11 @@ get_time           <- function(rates_raw, stage = "Time on hook"){
 ## Define core list of response variables 
 # Exclude: BE, SO2, Ca, Mg (?)
 resps <- c("pH", "PCO2", "PO2", "HCO3", "lac", "glu", "K", "Mg")
-## Define pretty axis titles
+## Define names (e.g., for tables)
+resps_names <- 
+  data.frame(resp = c("pH", "PCO2", "PO2", "HCO3", "lac", "glu", "K", "Mg"),
+             name = c("pH", "PCO2", "PO2", "HCO3", "Lac", "Glu", "K", "Mg"))
+## Define pretty axis expressions
 ylabs <- list(pH = "pH", 
               PCO2 = expression(PCO[2] ~ "[mmHg]"), 
               PO2 = expression(PO[2] ~ "[mmHg]"), 

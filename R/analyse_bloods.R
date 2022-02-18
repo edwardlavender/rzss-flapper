@@ -147,7 +147,8 @@ coef_names <- c("Intercept",
                 "Gaff (Y)", 
                 "Temperature: Time (capture → surface)")
 coef_tbl <- utils.add::tidy_coef(coef = coef(summary(mod)), 
-                                 coef_names = coef_names)
+                                 coef_names = coef_names, 
+                                 col_names = c("Coefficient", "Estimate", "SE", "t-value", "p-value"))
 tidy_write(coef_tbl, paste0("./fig/", resp, "_coef.txt"))
 
 #### Model residuals
@@ -197,6 +198,83 @@ pretty_predictions_1d(model = mod,
                       add_main = list(text = LETTERS[1:6], adj = 0, font = 2))
 par(pp)
 if(save) dev.off()
+
+
+################################
+#### Summaries
+
+#### Define a summary table for blood parameters (for BS1 and BS2)
+## This contains the number of observations, alongside summary
+# ... statistics of each distribution 
+summaries <- 
+  lapply(c(paste0(resps, "_1"), paste0(resps, "_2")), function(resp){
+  physio$resp <- physio[, resp]
+  pos <- which(!is.na(physio$resp))
+  n_obs <- length(pos)
+  stat_min <- min(physio$resp, na.rm = TRUE)
+  stat_med <- median(physio$resp, na.rm = TRUE)
+  stat_max <- max(physio$resp, na.rm = TRUE)
+  # mod <- lm(form_1, data = physio)
+  # n_mod <- nrow(model.frame(mod))
+  data.frame(Parameter = substr(resp, 1, nchar(resp) - 2),
+             Sample = substr(resp, nchar(resp), nchar(resp)),
+             Nobs = n_obs, 
+             # Nmod = n_mod, 
+             Min = stat_min, 
+             Med = stat_med, 
+             Max = stat_max)
+}) %>% dplyr::bind_rows()
+## Tidy summaries 
+summaries <- 
+  summaries %>% 
+  tidyr::pivot_wider(names_from = Sample, 
+                     values_from = c(Nobs, Min, Med, Max))
+colnames(summaries) <- 
+  stringr::str_replace_all(colnames(summaries), "_1", " [1]")
+colnames(summaries) <- 
+  stringr::str_replace_all(colnames(summaries), "_2", " [2]")
+summaries$Parameter <- 
+  resps_names$name[match(summaries$Parameter, resps_names$resp)]
+## Examine the range in the number of obserations across parameters for BS1/2
+utils.add::basic_stats(summaries$`Nobs [1]`)
+utils.add::basic_stats(summaries$`Nobs [2]`)
+## Write tidy table to file 
+summaries <- tidy_numbers(summaries, digits = 2)
+tidy_write(summaries, "./fig/blood_summaries.txt")
+
+#### Define tidy coefficient tables derived from mod_1 for each parameter
+# Define sample ("1" for BS1 and "2" for BS2)
+sample_for_coefs <- "1" # "2"
+coefs <- 
+  lapply(paste0(resps, "_", sample_for_coefs), function(resp){
+    # Fit model and get the number of observations used for model fitting
+    print(resp)
+    physio$resp <- physio[, resp]
+    mod         <- lm(form_1, data = physio)
+    n_mod       <- nrow(model.frame(mod))
+    # Extract tidy summary table 
+    coef_tbl <- 
+      utils.add::tidy_coef(coef = coef(summary(mod)), 
+                           coef_names = coef_names, 
+                           col_names = c("Coefficient", "Estimate", 
+                                         "SE", "t-value", "p-value")
+                           )
+    # Add parameter names and R2
+    coef_tbl <-
+      cbind(data.frame(Parameter = 
+                         resps_names$name[match(substr(resp, 1, nchar(resp) - 2), 
+                                                resps_names$resp)], 
+                       Nmod = nrow(model.frame(mod))), 
+            coef_tbl, 
+            data.frame(R2 = summary(mod)$r.squared))
+    coef_tbl$R2 <- add_lagging_point_zero(round(coef_tbl$R2, 3), 3)
+    coef_tbl[2:nrow(coef_tbl), c("Parameter", "Nmod", "R2")] <- NA
+    return(coef_tbl)
+  }) %>% dplyr::bind_rows()
+# Write tidy table of coefficients to file 
+tidy_write(coefs, 
+           paste0("./fig/blood_coefs_", sample, ".txt"),
+           na = "")
 
 
 #### End of code. 
