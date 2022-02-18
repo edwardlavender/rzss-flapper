@@ -106,6 +106,10 @@ if(sample == "2"){
   comparisons$time_surface <- 
     data.frame(time_from_surface_to_bs2 = range(physio$time_from_surface_to_bs2, na.rm = TRUE))
 }
+median(physio$temp_water, na.rm = TRUE)
+median(physio$time_from_capture_to_surface, na.rm = TRUE)
+median(physio$time_from_surface_to_bs1, na.rm = TRUE)
+median(physio$time_from_surface_to_bs2, na.rm = TRUE)
 
 #### Define simulation comparison labels
 labels <- c(sex          = expression(Sex[M]), 
@@ -117,7 +121,7 @@ labels <- c(sex          = expression(Sex[M]),
             gaff         = expression(Gaff[Y])
             )
 if(sample == 2){
-  labels["time_surface"] <- (Time["surface" %->% "BS2"])
+  labels["time_surface"] <- expression(Time["surface" %->% "BS2"])
 }
 
 ################################
