@@ -86,7 +86,7 @@ physio <-
     # be_1 = be_1, 
     # be_2 = be_2, 
     # HCO3
-    HCO3_1 = hc03_2_tc,
+    HCO3_1 = hco3_1_tc,
     HCO3_2 = hc03_2_tc,
     # SO2
     # SO2_1 = s02_1,
