@@ -35,9 +35,11 @@ if(save) png("./fig/blood_sample_change.png",
 pp <- par(mfrow = par_mf(length(resps)), 
           oma = c(4, 4, 2, 2), mar = c(2, 2, 2, 2))
 prompt <- FALSE # TRUE
-lapply(1:length(resps), function(i){
+obs_by_param <- 
+  lapply(1:length(resps), function(i){
   
   #### Define response
+  # i <- 1
   resp <- resps[i]
   ylab <- ylabs[[resp]]
   resp_1 <- paste0(resp, "_1")
@@ -50,6 +52,7 @@ lapply(1:length(resps), function(i){
   x <- rep(c("BS1", "BS2"), each = nrow(physio))
   x <- x[y_is_valid]
   x <- factor(x, levels = unique(x))
+  dat <- data.frame(resp = resp, x = x, y = y)
   
   #### Make boxplot
   pretty_boxplot(x, y, 
@@ -61,10 +64,36 @@ lapply(1:length(resps), function(i){
   mtext(side = 2, ylab, line = 2)
   mtext(side = 3, LETTERS[i], font = 2, adj = 0)
   if(prompt) readline("Press [Enter] to continue...")
+  return(dat)
 }) %>% invisible()
 mtext(side = 1, "Blood sample", line = 1, outer = TRUE)
 par(pp)
 if(save) dev.off()
+
+
+################################
+################################
+#### Summarise % change during handling
+
+#### Calculate % change in median values of each parameter during handling
+obs_by_param %>%
+  dplyr::bind_rows() %>% 
+  dplyr::group_by(resp, x) %>%
+  dplyr::summarise(avg = median(y)) %>%
+  dplyr::mutate(resp = factor(resp, levels = resps)) %>%
+  dplyr::arrange(resp, x) %>%
+  tidyr::pivot_wider(names_from = x, 
+                     values_from = avg) %>%
+  dplyr::mutate(difference = BS2 - BS1, 
+                percentage = (difference/BS1)*100) %>%
+  dplyr::arrange(percentage) %>%
+  dplyr::select(Par. = resp, 
+                BS1 = BS1, 
+                BS2 = BS2, 
+                `Absolute difference` = difference, 
+                `Percentage difference` = percentage) %>%
+  tidy_numbers(digits = 2) %>%
+  tidy_write(file = "./fig/blood_change_tbl.txt")
 
 
 #### End of code. 
