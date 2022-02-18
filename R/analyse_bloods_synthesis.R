@@ -272,6 +272,7 @@ pretty_axis(axis_ls = axis_ls, add = TRUE)
 #### Add legend
 px <- par(xpd = NA)
 if(sample == "1") ypos <- 60 else ypos <- 80
+if(sample == "2") ylabs_legend <- ylabs_legend[1:6]
 legend(-2.5, ypos,
        lty = rep(1, length(comparisons)), 
        col = cols, 
