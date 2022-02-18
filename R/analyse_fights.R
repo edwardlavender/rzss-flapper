@@ -46,7 +46,7 @@ psych::pairs.panels(fights[, c("time_fight",
                                "sun", 
                                "depth", 
                                "healthy"
-                               )])
+)])
 
 
 ################################
@@ -86,8 +86,8 @@ coef_tbl <- utils.add::tidy_coef(coef = coef(summary(mod)),
 tidy_write(coef_tbl, "./fig/fight_time_coef.txt")
 
 #### Model residuals
-if(save) tiff("./fig/fight_time_diagnostics.tiff", 
-              height = 5.5, width = 9, units = "in", res = 600)
+if(save) png("./fig/fight_time_diagnostics.png", 
+             height = 5.5, width = 9, units = "in", res = 600)
 pp <- par(mfrow = c(1, 2))
 # car::qqPlot(mod, line = "none", rep = 1e3)
 plot(mod, 1:2)
@@ -102,20 +102,19 @@ xlabs <- c("Sex",
            expression("Sun angle [" * degree * "]"), 
            expression("Temperature [" * degree * "C]"), 
            "Depth [m]"
-           )
+)
 ## Make plot 
-if(save) tiff("./fig/fight_time.tiff", 
-              height = 5.5, width = 9, units = "in", res = 600)
+if(save) png("./fig/fight_time.png", 
+             height = 5.5, width = 9, units = "in", res = 600)
 pp <- par(oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
 pretty_predictions_1d(model = mod, 
                       add_points = list(cex = fights$size_area, lwd = 0.5, col = "grey20"),
-                      add_error_bars = list(add_fit = list(pch = 3, lwd = 2), lwd = 2),
+                      add_error_bars = ebars_param,
                       add_xlab = list(text = xlabs, line = 2.75),
                       add_ylab = list(text = "Fight time [minutes]"),
                       add_main = list(text = LETTERS[1:6], adj = 0, font = 2))
 par(pp)
 if(save) dev.off()
-
 
 
 #### End of code. 

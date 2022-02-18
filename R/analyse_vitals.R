@@ -73,7 +73,7 @@ psych::pairs.panels(rates[, c("hr", "rr",
                               "gaff", 
                               "healthy", 
                               "time_index"
-                              )])
+)])
 
 #### Define response variable
 resp <- "hr" # "hr"
@@ -194,8 +194,8 @@ predict(mod,
 #### Visualise model predictions for each variable 
 
 ## Set up figure to save
-if(save) tiff(paste0("./fig/", resp, ".tiff"), 
-              height = 5.5, width = 9, units = "in", res = 600)
+if(save) png(paste0("./fig/", resp, ".png"), 
+             height = 5.5, width = 9, units = "in", res = 600)
 pp <- par(mfrow = c(2, 3), oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
 rates_in_mod <- model.frame(mod)
 
@@ -206,15 +206,15 @@ xlabs <- c("Sex",
            expression("Time (hook" %->% "surface) [mins]"), 
            "Gaff", 
            "Time on deck [mins]"
-           )
+)
 xlab_line = 2.25
 main_adj  <- 0
 main_font <- 2
 
 ## Define point colours, shapes and sizes
 col_param <- pretty_cols_brewer(zlim = range(rates_in_mod$temp_water), 
-                   scheme = "RdYlBu"
-                   )
+                                scheme = "RdYlBu"
+)
 col_param$col <- scales::alpha(col_param$col, 0.5)
 rates_in_mod$pt_col <- col_param$col[findInterval(rates_in_mod$temp_water, col_param$breaks)]
 # rates_in_mod$pt_col <- c("royalblue", "black")[rates_in_mod$sex]
@@ -233,7 +233,7 @@ pretty_predictions_1d(model = mod,
                       add_error_bars = ebars_param,
                       add_points = pt_param, 
                       one_page = FALSE
-                      )
+)
 
 ## Plot predictions for temperature (by fight time)
 # Define prediction data 
@@ -259,7 +259,7 @@ pretty_predictions_1d(model = mod,
                       add_xlab = list(text = xlabs[3], line = xlab_line), 
                       add_ylab = NULL, 
                       add_main = list(text = "C", adj = main_adj, font = main_font)
-                      )
+)
 # Add predictions for effects of temperature when fight time is high 
 p_d$time_from_capture_to_surface <- max(rates_for_resp$time_from_capture_to_surface)
 p_ci <- list_CIs(predict(mod, p_d, se.fit = TRUE, type = "response"))
@@ -297,7 +297,7 @@ pretty_predictions_1d(model = mod,
                       add_xlab = list(text = xlabs[4], line = xlab_line), 
                       add_ylab = NULL, 
                       add_main = list(text = "D", adj = main_adj, font = main_font)
-                      )
+)
 # Add predictions for effects of fight time in warm temperatures
 p_d$temp_water <- max(rates_for_resp$temp_water)
 p_ci <- list_CIs(predict(mod, p_d, se.fit = TRUE, type = "response"))
@@ -305,7 +305,7 @@ add_error_envelope(p_d$time_from_capture_to_surface,
                    p_ci, 
                    add_fit = list(col = "darkred"),
                    add_ci = list(col = scales::alpha("red", 0.2), border = FALSE)
-                   )
+)
 add_pt <- pt_param
 add_pt$x <- rates_for_resp$time_from_capture_to_surface
 add_pt$y <- rates_for_resp$resp

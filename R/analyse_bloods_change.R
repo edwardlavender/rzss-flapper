@@ -30,8 +30,8 @@ save <- TRUE
 #### Plot BS1 and BS2 
 
 #### Loop over each response and make plots
-if(save) tiff("./fig/blood_sample_change.tiff", 
-              height = 6, width = 8, units = "in", res = 800)
+if(save) png("./fig/blood_sample_change.png", 
+             height = 6, width = 8, units = "in", res = 800)
 pp <- par(mfrow = par_mf(length(resps)), 
           oma = c(4, 4, 2, 2), mar = c(2, 2, 2, 2))
 prompt <- FALSE # TRUE
@@ -50,13 +50,13 @@ lapply(1:length(resps), function(i){
   x <- rep(c("BS1", "BS2"), each = nrow(physio))
   x <- x[y_is_valid]
   x <- factor(x, levels = unique(x))
-
+  
   #### Make boxplot
   pretty_boxplot(x, y, 
                  varwidth = TRUE,
                  ylab = "",
                  pretty_axis_args = list(side = 1:2, control_digits = 1)
-                 )
+  )
   mtext(side = 2, ylab, line = 2)
   mtext(side = 3, LETTERS[i], font = 2, adj = 0)
   if(prompt) readline("Press [Enter] to continue...")
@@ -64,6 +64,7 @@ lapply(1:length(resps), function(i){
 mtext(side = 1, "Blood sample", line = 1, outer = TRUE)
 par(pp)
 if(save) dev.off()
+
 
 #### End of code. 
 ################################

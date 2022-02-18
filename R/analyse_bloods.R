@@ -54,7 +54,7 @@ covars <- c("sex", "age", "size_len",
             "time_from_capture_to_surface", 
             "time_from_surface_to_bs1", "time_from_capture_to_bs1",
             "time_from_surface_to_bs2", "time_from_capture_to_bs2",
-             "time_from_bs1_to_bs2", 
+            "time_from_bs1_to_bs2", 
             "temp_water", "gaff")
 physior <- physio[, colnames(physio) %in% c(covars, resp)]
 physior$resp <- physio[, resp]
@@ -152,8 +152,8 @@ coef_tbl <- utils.add::tidy_coef(coef = coef(summary(mod)),
 tidy_write(coef_tbl, paste0("./fig/", resp, "_coef.txt"))
 
 #### Model residuals
-if(save) tiff(paste0("./fig/", resp, "_diagnostics.tiff"), 
-              height = 5.5, width = 9, units = "in", res = 600)
+if(save) png(paste0("./fig/", resp, "_diagnostics.png"), 
+             height = 5.5, width = 9, units = "in", res = 600)
 pp <- par(mfrow = c(1, 2))
 # car::qqPlot(mod, line = "none", rep = 1e3)
 plot(mod, 1:2)
@@ -169,13 +169,13 @@ xlabs <- c("Sex",
            expression("Time (hook" %->% "surface) [mins]"), 
            expression("Time (surface" %->% "BS1) [mins]"),
            "Gaff"
-           )
+)
 if(sample == 2){
   xlabs[3] <- expression("Time (surface" %->% "BS2) [mins]")
 }
 ## Make plot 
-if(save) tiff(paste0("./fig/", resp, ".tiff"), 
-              height = 5.5, width = 9, units = "in", res = 600)
+if(save) png(paste0("./fig/", resp, ".png"), 
+             height = 5.5, width = 9, units = "in", res = 600)
 pp <- par(oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
 physio_in_mod <- model.frame(mod)
 ## Define point colours, shapes and sizes
@@ -208,22 +208,22 @@ if(save) dev.off()
 # ... statistics of each distribution 
 summaries <- 
   lapply(c(paste0(resps, "_1"), paste0(resps, "_2")), function(resp){
-  physio$resp <- physio[, resp]
-  pos <- which(!is.na(physio$resp))
-  n_obs <- length(pos)
-  stat_min <- min(physio$resp, na.rm = TRUE)
-  stat_med <- median(physio$resp, na.rm = TRUE)
-  stat_max <- max(physio$resp, na.rm = TRUE)
-  # mod <- lm(form_1, data = physio)
-  # n_mod <- nrow(model.frame(mod))
-  data.frame(Parameter = substr(resp, 1, nchar(resp) - 2),
-             Sample = substr(resp, nchar(resp), nchar(resp)),
-             Nobs = n_obs, 
-             # Nmod = n_mod, 
-             Min = stat_min, 
-             Med = stat_med, 
-             Max = stat_max)
-}) %>% dplyr::bind_rows()
+    physio$resp <- physio[, resp]
+    pos <- which(!is.na(physio$resp))
+    n_obs <- length(pos)
+    stat_min <- min(physio$resp, na.rm = TRUE)
+    stat_med <- median(physio$resp, na.rm = TRUE)
+    stat_max <- max(physio$resp, na.rm = TRUE)
+    # mod <- lm(form_1, data = physio)
+    # n_mod <- nrow(model.frame(mod))
+    data.frame(Parameter = substr(resp, 1, nchar(resp) - 2),
+               Sample = substr(resp, nchar(resp), nchar(resp)),
+               Nobs = n_obs, 
+               # Nmod = n_mod, 
+               Min = stat_min, 
+               Med = stat_med, 
+               Max = stat_max)
+  }) %>% dplyr::bind_rows()
 ## Tidy summaries 
 summaries <- 
   summaries %>% 
@@ -258,7 +258,7 @@ coefs <-
                            coef_names = coef_names, 
                            col_names = c("Coefficient", "Estimate", 
                                          "SE", "t-value", "p-value")
-                           )
+      )
     # Add parameter names and R2
     coef_tbl <-
       cbind(data.frame(Parameter = 
