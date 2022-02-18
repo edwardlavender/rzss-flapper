@@ -45,8 +45,8 @@ physio <- physio[physio$healthy == 1, ]
 
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"  
-yvar   <- "K"
-sample <- "2"
+yvar   <- "lac"
+sample <- "1"
 resp   <- paste0(yvar, "_", sample)
 
 #### Focus on specific columns
@@ -115,9 +115,9 @@ if(sample == 1){
 }
 
 #### Model fitting 
-mod_1 <- lm(form_1, data = physior)
-mod_2 <- lm(form_2, data = physior)
-mod_3 <- lm(form_3, data = physior)
+mod_1 <- glm(form_1, family = gaussian(link = "log"), data = physior)
+mod_2 <- glm(form_2, family = gaussian(link = "log"), data = physior)
+mod_3 <- glm(form_3, family = gaussian(link = "log"), data = physior)
 summary(mod_1)
 summary(mod_2)
 summary(mod_3)

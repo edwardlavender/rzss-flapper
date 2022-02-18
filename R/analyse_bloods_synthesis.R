@@ -22,6 +22,9 @@ source("./R/define_global_param.R")
 #### Load data
 physio <- readRDS("./data/skate/physio.rds")
 
+#### Define param
+set.seed(1)
+
 
 ################################
 ################################
@@ -31,7 +34,7 @@ physio <- readRDS("./data/skate/physio.rds")
 #### Set up simulations 
 
 #### Define blood sample ("1" or "2") and response variables
-sample <- "2"
+sample <- "1"
 if(sample == "1"){
   resps_for_bs <- paste0(resps, "_1")
 } else if(sample == "2"){
@@ -113,16 +116,14 @@ median(physio$time_from_surface_to_bs2, na.rm = TRUE)
 
 #### Define simulation comparison labels
 labels <- c(sex          = expression(Sex[M]), 
-            temp_1       = expression("T (" * Time["hook" %->% "surface"[min]] * ")"),
-            temp_2       = expression("T (" * Time["hook" %->% "surface"[max]] * ")"),
-            time_fight_1 = expression(Time["hook" %->% "surface"] * " (" * T[min] *")"), 
-            time_fight_2 = expression(Time["hook" %->% "surface"] * " (" * T[max] *")"), 
-            time_surface = expression(Time["surface" %->% "BS1"]), 
+            temp_1       = expression(T[L]),
+            temp_2       = expression(T[H]),
+            time_fight_1 = expression(FT[L]), 
+            time_fight_2 = expression(FT[H]), 
+            time_surface = expression(ST[]), 
             gaff         = expression(Gaff[Y])
             )
-if(sample == 2){
-  labels["time_surface"] <- expression(Time["surface" %->% "BS2"])
-}
+
 
 ################################
 #### Implement simulation 
@@ -136,10 +137,10 @@ if(run){
     pbapply::pblapply(resps_for_bs, cl = 7L, function(resp){
       
       #### Fit model for response
-      # resp <- resps_for_bs[7]
+      # resp <- resps_for_bs[5]
       print(paste0(resp, "-----------------------------"))
       physio$resp <- physio[, resp]
-      mod <- lm(form_1, data = physio)
+      mod <- glm(form_1, data = physio, family = gaussian(link ="log"))
       
       #### Define comparisons for selected response 
       comparisons_by_resp <- 
@@ -209,19 +210,14 @@ outsims <-
   dplyr::arrange(comparison, resp)
 
 #### Define simulation IDs (for the x axis)
-outsims$id <- 0
-gap <- 5
-for(i in 2:nrow(outsims)){
-  if(outsims$comparison[i-1] == outsims$comparison[i]){
-    outsims$id[i] <- outsims$id[i - 1] + 1
-  } else {
-    outsims$id[i] <- outsims$id[i - 1] + gap
-  }
-}
+outsims <- 
+  outsims %>%
+  dplyr::group_by(resp) %>%
+  dplyr::mutate(id = dplyr::row_number())
 
-#### Define colours to distinguish blood parameters
-cols        <- RColorBrewer::brewer.pal(length(resps), "Dark2")
-outsims$col <- cols[outsims$resp]
+#### Define colours to distinguish explanatory variables
+cols        <- RColorBrewer::brewer.pal(length(comparisons), "Dark2")
+outsims$col <- cols[outsims$comparison]
 
 
 ################################
@@ -229,60 +225,40 @@ outsims$col <- cols[outsims$resp]
 
 #### Set up plot to save
 png(paste0("./fig/blood_ratios_", sample, ".png"), 
-    height = 6, width = 14, units = "in", res = 600)
-pp <- par(oma = c(2, 1, 1, 1), mar = c(2, 1, 1, 1))
-xlim <- range(c(-gap/2, outsims$id))
+    height = 6, width = 6, units = "in", res = 600)
+pp <- par(mfrow = c(4, 2), 
+          oma = c(2, 2, 2, 2), mar = c(2, 2, 2, 2)
+          )
 
-#### Make blank plot 
-axis_ls <- 
-  pretty_plot(outsims$id, outsims$ratio, 
-              pretty_axis_args = 
-                list(x = list(x = range(c(-gap/2, outsims$id)), 
-                              y = range(c(outsims$lowerCI, outsims$upperCI), na.rm = TRUE)), 
-                     add = FALSE),
-              xlim = xlim,
-              xlab = "", ylab = "",
-              type = "n")
+#### Generate plots 
+outsims_by_resps <- split(outsims, outsims$resp)
+lapply(1:length(outsims_by_resps), function(i){
+  outsim <- outsims_by_resps[[i]]
+  axis_ls <- 
+    pretty_plot(outsim$comparison, outsim$ratio, 
+                pretty_axis_args = 
+                  list(x = list(x = outsim$comparison[1:2], 
+                                y = range(c(outsim$lowerCI, outsim$upperCI), na.rm = TRUE)),
+                       pretty = list(list(n = 10), list(n = 3)), 
+                       add = FALSE),
+                xlab = "", ylab = "",
+                type = "n")
+  lines(axis_ls[[1]]$lim, c(1, 1), lty = 2)
+  elwd <- 1
+  add_error_bars(outsim$id, 
+                 outsim$ratio, 
+                 lwr = outsim$lowerCI, upr = outsim$upperCI, lwd = elwd,
+                 add_fit = list(pch = "-", col = outsim$col, lwd = elwd), 
+                 col = outsim$col)
+  
+  axis_ls[[1]]$axis$labels <- labels
+  pretty_axis(axis_ls = axis_ls, add = TRUE)
+  mtext(side = 3, LETTERS[i], font = 2, adj = 0.03, line = 0.25)
+}) %>% invisible()
 
-#### Add visual aids
-# Vertical lines to separate comparisons
-outsims_by_comparison <- split(outsims, outsims$comparison)
-lapply(outsims_by_comparison[2:length(outsims_by_comparison)], function(d){
-  lines(rep(d$id[1], 2) - gap/2, axis_ls[[2]]$lim, lty = 3, lwd = 0.5)
-})
-# Horizontal line at effect size = 0
-lines(axis_ls[[1]]$lim, c(1, 1), lty = 2)
-7
-#### Add error bars
-elwd <- 1.5
-add_error_bars(outsims$id, 
-               outsims$ratio, 
-               lwr = outsims$lowerCI, upr = outsims$upperCI, lwd = elwd,
-               add_fit = list(pch = "-", col = outsims$col, lwd = elwd), 
-               col = outsims$col)
-
-#### Add axes
-axis_ls[[1]]$axis$at <- outsims %>%
-  dplyr::group_by(comparison) %>%
-  dplyr::summarise(at = mean(id)) %>%
-  dplyr::pull(at)
-axis_ls[[1]]$axis$labels <- labels
-pretty_axis(axis_ls = axis_ls, add = TRUE)
-
-#### Add legend
-px <- par(xpd = NA)
-if(sample == "1") ypos <- 60 else ypos <- 80
-if(sample == "2") ylabs_legend <- ylabs_legend[1:6]
-legend(-2.5, ypos,
-       lty = rep(1, length(comparisons)), 
-       col = cols, 
-       legend = ylabs_legend, 
-       bty = "n")
-par(px)
-
-#### Add titles and save
-mtext(side = 1, "Term", line = 2)
-mtext(side = 2, "Effect size (ratio)", line = 1)
+#### Add titles
+mtext(side = 1, "Term", outer = TRUE, line = 0.5)
+mtext(side = 2, "Effect size (ratio)", outer = TRUE, line = 0.5)
 par(pp)
 dev.off()
 
