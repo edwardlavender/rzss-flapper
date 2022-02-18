@@ -53,7 +53,8 @@ lapply(1:length(resps), function(i){
   
   #### Make boxplot
   pretty_boxplot(x, y, 
-                 varwidth = TRUE,
+                 width = c(length(which(!is.na(physio[, resp_1]))), 
+                           length(which(!is.na(physio[, resp_2])))),
                  ylab = "",
                  pretty_axis_args = list(side = 1:2, control_digits = 1)
   )
