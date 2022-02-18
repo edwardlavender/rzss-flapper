@@ -226,7 +226,7 @@ outsims$col <- cols[outsims$resp]
 #### Set up plot to save
 png(paste0("./fig/blood_ratios_", sample, ".png"), 
     height = 6, width = 14, units = "in", res = 600)
-pp <- par(oma = c(2, 1, 1, 4), mar = c(2, 1, 1, 1))
+pp <- par(oma = c(2, 1, 1, 1), mar = c(2, 1, 1, 1))
 xlim <- range(c(-gap/2, outsims$id))
 
 #### Make blank plot 
@@ -267,8 +267,8 @@ pretty_axis(axis_ls = axis_ls, add = TRUE)
 
 #### Add legend
 px <- par(xpd = NA)
-if(sample == "1") ypos <- -5 else ypos <- -2.5
-legend(70, ypos,
+if(sample == "1") ypos <- 60 else ypos <- 80
+legend(-2.5, ypos,
        lty = rep(1, length(comparisons)), 
        col = cols, 
        legend = ylabs_legend, 
