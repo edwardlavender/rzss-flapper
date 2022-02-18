@@ -67,6 +67,16 @@ if(ylabs_check){
   }
   par(pp)
 }
+## Define legend labels
+ylabs_legend <- c(expression("pH"), 
+                  expression(PCO[2]), 
+                  expression(PO[2]), 
+                  expression(HCO[3]),
+                  expression("Lactate"), 
+                  expression("Glucose"), 
+                  expression("K"), 
+                  expression("Mg")
+)
 
 #### Define graphical parameters for error bars
 ebars_lwd   <- 2

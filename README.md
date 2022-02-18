@@ -91,7 +91,9 @@ Flapper Skate project.*
           - `coast/` contains processed coastline data from
             `process_spatial.R` (see below);
           - `mesh/` contains processed WeStCOMS mesh files from
-            `process_spatial.R` (see below); <br/><br/>
+            `process_spatial.R` (see below);
+      - `estimates/` contains model outputs from `analyse_*.R` scripts;
+        <br/><br/>
 3.  **`R/`** contains scripts for data processing and analysis:
       - `define_global_param.R` defines global parameters;
       - `process_bloods.R` processes raw blood parameter data;
@@ -102,6 +104,8 @@ Flapper Skate project.*
       - `analyse_bloods.R` analyses BS1 and BS2;
       - `analyse_bloods_change.R` analyses the change in blood
         parameters during handling;
+      - `analyse_bloods_synthesis.R` synthesises results across blood
+        parameters;
       - `analyse_vitals.R` analyses heart and respiratory rates during
         handling; <br/><br/>
 4.  **`fig/`** contains tables and figures.
@@ -117,8 +121,8 @@ in the online version of this repository.
     `process_spatial.R` and `process_fights.R`.
 
 3.  **Implement data analysis** via `analyse_fights.R`,
-    `analyse_bloods.R`, `analyse_bloods_change.R` and
-    `analyse_vitals.R`.
+    `analyse_bloods.R`, `analyse_bloods_change.R`,
+    `analyse_bloods_synthesis.R` and `analyse_vitals.R`.
 
 # GitHub packages
 

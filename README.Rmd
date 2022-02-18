@@ -41,7 +41,8 @@ _Figure 1. A flapper skate is released following capture and handing in the Loch
       - `spatial/` contains processed spatial data:
           - `bathy/` contains one arc-second bathymetry data from [Digimap](https://digimap.edina.ac.uk) (higher resolution data from the [Ireland, Northern Ireland and Scotland Hydrographic surveys](https://doi.org/10.1017/S1755691015000146) are not available for all sampled locations);
           - `coast/` contains processed coastline data from `process_spatial.R` (see below);
-          - `mesh/` contains processed WeStCOMS mesh files from `process_spatial.R` (see below); <br/><br/>
+          - `mesh/` contains processed WeStCOMS mesh files from `process_spatial.R` (see below); 
+      - `estimates/` contains model outputs from `analyse_*.R` scripts; <br/><br/>
 
 3.  **`R/`** contains scripts for data processing and analysis:
       - `define_global_param.R` defines global parameters;
@@ -52,6 +53,7 @@ _Figure 1. A flapper skate is released following capture and handing in the Loch
       - `analyse_fights.R` analyses capture fights;
       - `analyse_bloods.R` analyses BS1 and BS2;
       - `analyse_bloods_change.R` analyses the change in blood parameters during handling;
+      - `analyse_bloods_synthesis.R` synthesises results across blood parameters;
       - `analyse_vitals.R` analyses heart and respiratory rates during handling; <br/><br/>
       
 4.  **`fig/`** contains tables and figures.
@@ -64,7 +66,7 @@ Note that the `data-raw`, `data` and `fig` directories are not provided in the o
 
 2. **Process raw data** via `process_bloods.R`, `process_vitals.R`, `process_spatial.R` and `process_fights.R`. 
 
-3. **Implement data analysis** via `analyse_fights.R`, `analyse_bloods.R`, `analyse_bloods_change.R` and `analyse_vitals.R`. 
+3. **Implement data analysis** via `analyse_fights.R`, `analyse_bloods.R`, `analyse_bloods_change.R`, `analyse_bloods_synthesis.R` and `analyse_vitals.R`. 
 
 # GitHub packages
 
