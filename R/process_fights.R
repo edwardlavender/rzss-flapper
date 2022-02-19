@@ -182,6 +182,12 @@ str(fights)
 fights$sex <- factor(fights$sex)
 fights$pit <- factor(fights$pit)
 
+#### Save full set of capture event IDs
+fights$date <- as.Date(fights$time_stamp)
+fights$key  <- paste0(fights$pit, "-", fights$date)
+saveRDS(fights[, c("sheet_name", "pit", "date", "key", "event_id")], 
+        "./data/skate/capture_events.rds")
+
 #### Summary statistics
 ## Number of captures
 nrow(fights)
@@ -369,7 +375,6 @@ table(!is.na(fights$sun))
 #### Get current velocities from WeStCOMS 
 
 #### Define WeStCOMS dates/names/times
-fights$date      <- as.Date(fights$time_stamp)
 fights$date_name <- fvcom.tbx::date_name(fights$date)
 fights$hour      <- round(Tools4ETS::hour_dbl(fights$time_stamp))
 fights$year      <- lubridate::year(fights$date)
