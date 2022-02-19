@@ -52,6 +52,16 @@ resps <- c("pH", "PCO2", "PO2", "HCO3", "lac", "glu", "K", "Mg")
 resps_names <- 
   data.frame(resp = c("pH", "PCO2", "PO2", "HCO3", "lac", "glu", "K", "Mg"),
              name = c("pH", "PCO2", "PO2", "HCO3", "Lac", "Glu", "K", "Mg"))
+## Define plot titles
+titles <- list(pH    = expression(bold("A") ~ "(" * "pH" * ")"),
+               PCO2  = expression(bold("B") ~ "(" * PCO[2] * ")"),
+               PO2   = expression(bold("C") ~ "(" * PO[2] * ")"),
+               HCO3  = expression(bold("D") ~ "(" * HCO[3] * ")"),
+               lac   = expression(bold("E") ~ "(" * "Lac" * ")"),
+               glu   = expression(bold("F") ~ "(" * "Glu" * ")"),
+               K     = expression(bold("G") ~ "(" * "K" * ")"),
+               Mg    = expression(bold("H") ~ "(" * "Mg" * ")")
+               )
 ## Define pretty axis expressions
 ylabs <- list(pH = "pH", 
               PCO2 = expression(PCO[2] ~ "[mmHg]"), 
@@ -62,7 +72,7 @@ ylabs <- list(pH = "pH",
               K = expression("K [mmol" * L^-1 * "]"), 
               Mg = expression("Mg [mmol" * L^-1 * "]")
               )
-# Check titles
+# Check ylabs
 ylabs_check <- FALSE
 if(ylabs_check){
   pp <- par(mfrow = par_mf(length(resps)))
@@ -81,6 +91,17 @@ ylabs_legend <- c(expression("pH"),
                   expression("K"), 
                   expression("Mg")
 )
+
+#### Blood parameter limits 
+ylims <- list(pH   = c(7.1, 7.6), 
+              PCO2 = c(3, 7), 
+              PO2  = c(0, 300),
+              HCO3 = c(3, 10),
+              lac  = c(0, 3.5),
+              glu  = c(0.5, 3),
+              K    = c(0, 12),
+              Mg   = c(0.7, 1.4)
+              )
 
 #### Define graphical parameters for error bars
 ebars_lwd   <- 2

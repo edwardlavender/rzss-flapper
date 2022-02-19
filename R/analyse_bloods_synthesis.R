@@ -80,7 +80,8 @@ skeleton <- rbind(skeleton, skeleton)
 #### Define simulation comparisons 
 ## Sex: 
 # ... female versus male
-## Body size: minimum (female) versus maximum (female) 
+## Body size: 
+# ... minimum versus maximum 
 ## Temperature: 
 # ... minimum versus maximum (low fight time)
 # ... minimum versus maximum (high fight time)
@@ -94,6 +95,7 @@ skeleton <- rbind(skeleton, skeleton)
 comparisons <- 
   list(
     sex           = data.frame(sex = factor(c("F", "M"), levels = c("F", "M"))), 
+    size          = data.frame(size_len = range(physio$size_len, na.rm = TRUE)),
     temp_1        = data.frame(temp_water = range(physio$temp_water), 
                                time_from_capture_to_surface = min(physio$time_from_capture_to_surface)), 
     temp_2        = data.frame(temp_water = range(physio$temp_water), 
@@ -109,6 +111,7 @@ if(sample == "2"){
   comparisons$time_surface <- 
     data.frame(time_from_surface_to_bs2 = range(physio$time_from_surface_to_bs2, na.rm = TRUE))
 }
+median(physio$size_len, na.rm = TRUE)
 median(physio$temp_water, na.rm = TRUE)
 median(physio$time_from_capture_to_surface, na.rm = TRUE)
 median(physio$time_from_surface_to_bs1, na.rm = TRUE)
@@ -116,6 +119,7 @@ median(physio$time_from_surface_to_bs2, na.rm = TRUE)
 
 #### Define simulation comparison labels
 labels <- c(sex          = expression(Sex[M]), 
+            size         = expression(Size),
             temp_1       = expression(T[L]),
             temp_2       = expression(T[H]),
             time_fight_1 = expression(FT[L]), 
@@ -227,33 +231,39 @@ outsims$col <- cols[outsims$comparison]
 png(paste0("./fig/blood_ratios_", sample, ".png"), 
     height = 6, width = 6, units = "in", res = 600)
 pp <- par(mfrow = c(4, 2), 
-          oma = c(2, 2, 2, 2), mar = c(2, 2, 2, 2)
+          oma = c(2, 2, 2, 2), mar = c(2, 2, 2, 0)
           )
 
 #### Generate plots 
 outsims_by_resps <- split(outsims, outsims$resp)
 lapply(1:length(outsims_by_resps), function(i){
   outsim <- outsims_by_resps[[i]]
-  axis_ls <- 
-    pretty_plot(outsim$comparison, outsim$ratio, 
-                pretty_axis_args = 
+  if(!all(is.na(outsim$ratio))){
+    axis_ls <- 
+      pretty_plot(outsim$comparison, outsim$ratio, 
+                  # ylim = c(0, NA),
+                  pretty_axis_args = 
                   list(x = list(x = outsim$comparison[1:2], 
                                 y = range(c(outsim$lowerCI, outsim$upperCI), na.rm = TRUE)),
-                       pretty = list(list(n = 10), list(n = 3)), 
+                       pretty = list(list(n = 10), list(n = 3, high.u.bias = 1)), 
                        add = FALSE),
-                xlab = "", ylab = "",
-                type = "n")
-  lines(axis_ls[[1]]$lim, c(1, 1), lty = 2)
-  elwd <- 1
-  add_error_bars(outsim$id, 
-                 outsim$ratio, 
-                 lwr = outsim$lowerCI, upr = outsim$upperCI, lwd = elwd,
-                 add_fit = list(pch = "-", col = outsim$col, lwd = elwd), 
-                 col = outsim$col)
-  
-  axis_ls[[1]]$axis$labels <- labels
-  pretty_axis(axis_ls = axis_ls, add = TRUE)
-  mtext(side = 3, LETTERS[i], font = 2, adj = 0.03, line = 0.25)
+                  xlab = "", ylab = "",
+                  type = "n")
+    lines(axis_ls[[1]]$lim, c(1, 1), lty = 2)
+    elwd <- 1
+    add_error_bars(outsim$id, 
+                   outsim$ratio, 
+                   lwr = outsim$lowerCI, upr = outsim$upperCI, lwd = elwd,
+                   add_fit = list(pch = "-", col = outsim$col, lwd = elwd), 
+                   col = outsim$col)
+    
+    axis_ls[[1]]$axis$labels <- labels
+    pretty_axis(axis_ls = axis_ls, add = TRUE)
+    resp  <- as.character(outsim$resp[1])
+    resp  <- substr(resp, 1, nchar(resp) - 2)
+    title <- titles[[resp]]
+    mtext(side = 3, title, font = 2, adj = 0.03, line = 0.25)
+  }
 }) %>% invisible()
 
 #### Add titles
