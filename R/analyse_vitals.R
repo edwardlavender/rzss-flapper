@@ -213,8 +213,9 @@ main_font <- 2
 
 ## Define point colours, shapes and sizes
 col_param <- pretty_cols_brewer(zlim = range(rates_in_mod$temp_water), 
-                                scheme = "RdYlBu"
-)
+                                scheme = "RdYlBu",
+                                rev = TRUE
+                                )
 col_param$col <- scales::alpha(col_param$col, 0.5)
 rates_in_mod$pt_col <- col_param$col[findInterval(rates_in_mod$temp_water, col_param$breaks)]
 # rates_in_mod$pt_col <- c("royalblue", "black")[rates_in_mod$sex]
