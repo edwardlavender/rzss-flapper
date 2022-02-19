@@ -205,7 +205,7 @@ pretty_plot(fights$temp_water,fights$time_handling)
 mod_1 <- glm(time_handling ~ temp_water, 
              family = gaussian(link = "log"), 
              data = fights)
-pretty_predictions_1d(mod_1, var = "temp_water")
+pretty_predictions_1d(mod_1, x_var = "temp_water")
 list_CIs(predict(mod_1, 
                  newdata = data.frame(temp_water = c(min(fights$temp_water), max(fights$temp_water))), 
                  se.fit = TRUE,
@@ -333,7 +333,10 @@ tidy_write(fights_tbl_2, "./fig/fights_tbl_2.txt")
 fights$xy_raw <- NULL
 fights$notes  <- NULL
 fights        <- fights[fights$healthy == 1, ]
-fights        <- fights[complete.cases(fights), ]
+fights        <- fights[complete.cases(fights[, c("time_fight", "healthy", "lon", "lat")]), ]
+nrow(fights)
+# 43
+
 # Recheck locations
 pretty_map(coast, 
            add_polys = list(x = coast), 
@@ -347,6 +350,8 @@ write.csv(fights[, c("lon", "lat")],
 
 #### Add depths 
 fights$depth <- abs(raster::extract(digi, fights[, c("lon", "lat")]))
+table(!is.na(fights$depth)) 
+# TRUE
 
 #### Add sun angles
 data_for_suncalc <- 
@@ -357,7 +362,8 @@ fights$sun <- suncalc::getSunlightPosition(data = data_for_suncalc)$altitude * 1
 pretty_plot(fights$time_stamp, fights$sun, 
             pretty_axis_args = list(axis = list(list(format = "%b-%y"), list()))
             )
-
+table(!is.na(fights$sun)) 
+# TRUE
 
 ################################
 #### Get current velocities from WeStCOMS 
@@ -441,13 +447,25 @@ velocities <-
 fights$key           <- paste0(fights$date_name, "-", fights$mesh_ID)
 velocities$key       <- paste0(velocities$date_name, "-", velocities$mesh_ID)
 fights$current_speed <- velocities$current_speed[match(fights$key, velocities$key)]
+table(is.na(fights$current_speed))
 
 #### Add body (dorsal) surface area
 fights$size_area <- 0.5 * (fights$size_disc/100)^2
-fights <- fights[complete.cases(fights), ]
+table(!is.na(fights$size_area))
+# TRUE
+
+#### Select rows/columns 
+fights <- fights[complete.cases(fights[, c("event_id", 
+                                           "time_fight", 
+                                           "size_area", 
+                                           "current_speed", 
+                                           "sun", 
+                                           "depth", 
+                                           "healthy")]), ]
+nrow(fights)
 
 #### Examine handling time 
-# utils.add::basic_stats(difftime(fights$time_release, fights$time_stamp))
+# utils.add::basic_stats(difftime(fights$time_release, fights$time_stamp), na.rm = TRUE)
 
 #### Drop records of individuals caught during the processing of another individual
 ## Justification 
@@ -455,22 +473,24 @@ fights <- fights[complete.cases(fights), ]
 # ... them immediately to the surface, so fight times may be positively biased
 # ... and not reflect responses of skate to capture. 
 ## Define blank columns and intervals 
-fights$check_1 <- fights$check_2 <- fights$check_3 <- NA
+fights$check_1  <- fights$check_2 <- fights$check_3 <- NA
 fights$interval <- lubridate::interval(fights$time_stamp, fights$time_release)
+fights$interval[is.na(fights$time_release)] <- NA
 ## Loop over each individual and identify whether or not time on hook occurred
 # ... during the processing of another individual
 for(i in 1:nrow(fights)){
   # Isolate fights of other individuals
   fights_of_others <- fights[-i, ]
-  # Check whether time on hook occured during handling intervals
+  pos <- which(!is.na(fights_of_others$interval))
+  # Check whether time on hook occurred during handling intervals
   # ... Note that this includes if the individual was captured at the moment 
   # ... of release, which we will account for below. 
   fights$check_1[i]  <- 
-    any(fights$time_stamp[i] %within% fights_of_others$interval)
+    any(fights$time_stamp[i] %within% fights_of_others$interval[pos])
   # Check that the individual was not captured as the individual was released
   # ... in which case we can include the information from that individual. 
   fights$check_2[i] <- 
-    all(fights$time_stamp[i] != fights_of_others$time_release) 
+    all(fights$time_stamp[i] != fights_of_others$time_release[pos]) 
 }
 fights$check_3 <- fights$check_1 & fights$check_2
 ## Visual check 
@@ -484,9 +504,9 @@ if(visual_check){
 ## The number of excluded records: 
 table(fights$check_3)
 # FALSE  TRUE 
-# 36     6 
+# 36     7 
 ## Exclude fight times for these individuals:
-fights <- fights[!fights$check_3, ]
+fights <- fights[-which(fights$check_3), ]
 nrow(fights) # 36
 
 #### Save processed fights dataframe
