@@ -91,17 +91,26 @@ ylabs_legend <- c(expression("pH"),
                   expression("K"), 
                   expression("Mg")
 )
-
-#### Blood parameter limits 
-ylims <- list(pH   = c(7.1, 7.6), 
-              PCO2 = c(3, 7), 
+## Blood parameter limits 
+ylims <- list(pH   = c(6.9, 7.8), 
+              PCO2 = c(1, 10), 
               PO2  = c(0, 300),
-              HCO3 = c(3, 10),
-              lac  = c(0, 3.5),
+              HCO3 = c(2, 10),
+              lac  = c(0, 5),
               glu  = c(0.5, 3),
               K    = c(0, 12),
               Mg   = c(0.7, 1.4)
               )
+
+#### Effect size limits
+ylims_ratios <- list(pH    = c(0.90, 1.05), 
+                     PCO2  = c(0, 4),
+                     PO2   = c(0, 4),
+                     HCO3  = c(0, 2),
+                     lac   = c(0, 10),
+                     glu   = c(0, 4),
+                     K     = c(0, 6), 
+                     Mg    = c(0.5, 2))
 
 #### Define graphical parameters for error bars
 ebars_lwd   <- 2

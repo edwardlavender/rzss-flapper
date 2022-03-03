@@ -38,8 +38,8 @@ physio <- physio[physio$healthy == 1, ]
 
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"  
-yvar   <- "Mg"
-sample <- "1"
+yvar   <- "lac"
+sample <- "2"
 resp   <- paste0(yvar, "_", sample)
 
 #### Focus on specific columns
@@ -158,16 +158,17 @@ tidy_write(coef_tbl, paste0("./fig/", resp, "_coef.txt"))
 
 #### Visualise model predictions for each variable 
 ## Set up figure to save
-save <- T
+save <- TRUE
 if(save) png(paste0("./fig/", resp, "_preds.png"), 
              height = 5.5, width = 9, units = "in", res = 600)
 pp <- par(mfrow = c(2, 3), oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
+
+## Define graphical param
+# Define data used for model fitting
 physio_in_mod <- model.frame(mod)
-
-## Define manual limits, if necessary
+# Get appropriate y limits
 ylim <- ylims[[substr(resp, 1, nchar(resp) - 2)]]
-
-## Define titles
+# Define titles
 xlabs <- c("Sex", 
            "Length [cm]", 
            expression("Temperature [" * degree * "C]"), 
@@ -178,16 +179,20 @@ xlabs <- c("Sex",
 if(sample == 2){
   xlabs[3] <- expression("Time (surface" %->% "BS2) [mins]")
 }
-xlab_line = 2.25
+# Define title param
+xlab_line <- 2.25
 main_adj  <- 0
 main_font <- 2
-
-## Define point colours, shapes and sizes
+# Define point colours, shapes and sizes
 physio_in_mod$pt_pch <- 21 
-physio_in_mod$pt_cex <- 1
-pt_param <- list(col = "black", 
+physio_in_mod$pt_cex <- 0.75
+pt_param <- list(col = scales::alpha("black", 0.75),
                  cex = physio_in_mod$pt_cex, 
-                 pch = physio_in_mod$pt_pch)
+                 pch = physio_in_mod$pt_pch, 
+                 lwd = 0.75)
+# Adjust error bar parameters
+ebars_param$lwd          <- 1.5
+ebars_param$add_fit$lwd <- 1.5
 
 ## Plot predictions for sex
 pretty_predictions_1d(model = mod, 
@@ -211,7 +216,11 @@ p_d <- data.frame(temp_water = p_x)
 p_d$time_from_capture_to_surface <- min(physio_in_mod$time_from_capture_to_surface)
 p_d$sex        <- factor("F", levels = c("F", "M"))
 p_d$size_len   <- mean(physio_in_mod$size_len)
-p_d$time_from_surface_to_bs1 <- mean(physio_in_mod$time_from_surface_to_bs1) # added (not in rates models)
+if(sample == "1"){
+  p_d$time_from_surface_to_bs1 <- mean(physio_in_mod$time_from_surface_to_bs1) # added (not in rates models)
+} else {
+  p_d$time_from_surface_to_bs2 <- mean(physio_in_mod$time_from_surface_to_bs2) # added (not in rates models)
+}
 p_d$gaff       <- factor("N", levels = c("N", "F"))
 p_d$time_index <- 1
 # Plot predictions for effects of temperature when fight time is low 
@@ -243,11 +252,15 @@ add_pt$cex <- physio_in_mod$time_from_capture_to_surface/20
 px <- par(xpd = NA)
 do.call(points, add_pt)
 par(px)
-legend("topright", 
+legend_pos <- "topleft"
+legend_adj <- 0.1
+if(resp %in% c("pH_1", "HCO3_1", "pH_2")) legend_pos <- "bottomleft"
+legend(legend_pos,
        lty = c(1, 1),
        col = c("royalblue", "darkred"), 
        lwd = c(1.5, 1.5),
        legend = c(expression(Time[H %->% S[min]]), expression(Time[H %->% S[max]])),
+       adj = legend_adj,
        bty = "n")
 
 ## Plot predictions for fight time (by temperature)
@@ -260,7 +273,11 @@ p_d            <- data.frame(time_from_capture_to_surface = p_x)
 p_d$temp_water <- min(physio_in_mod$temp_water)
 p_d$sex        <- factor("F", levels = c("F", "M"))
 p_d$size_len   <- mean(physio_in_mod$size_len)
-p_d$time_from_surface_to_bs1 <- mean(physio_in_mod$time_from_surface_to_bs1) # added
+if(sample == "1"){
+  p_d$time_from_surface_to_bs1 <- mean(physio_in_mod$time_from_surface_to_bs1) # added
+} else {
+  p_d$time_from_surface_to_bs2 <- mean(physio_in_mod$time_from_surface_to_bs2) # added
+}
 p_d$gaff       <- factor("N", levels = c("N", "F"))
 p_d$time_index <- 1
 # Plot predictions for effects of fight time in low temperatures 
@@ -289,10 +306,13 @@ add_pt$x <- physio_in_mod$time_from_capture_to_surface
 add_pt$y <- physio_in_mod$resp
 add_pt$cex <- physio_in_mod$temp_water/10
 do.call(points, add_pt)
-legend("topright", 
+legend_adj <- 0.2
+if(resp %in% c("PCO2_2")) legend_pos <- "topright"
+legend(legend_pos, 
        lty = c(1, 1),
        col = c("royalblue", "darkred"), 
        legend = c(expression(T[min]), expression(T[max])), 
+       adj = legend_adj,
        bty = "n")
 
 ## Plot predictions for handling time and gaff 
@@ -324,6 +344,22 @@ pp <- par(mfrow = c(1, 2))
 plot(mod, 1:2)
 par(pp)
 if(save) dev.off()
+
+#### Predictive accuracy
+physio_in_mod$x <- factor(1:nrow(physio_in_mod))
+ps              <- list_CIs(predict(mod, type = "response", se.fit = TRUE))
+pretty_plot(physio_in_mod$x, physio_in_mod$resp, 
+            pretty_axis_args = 
+              list(side = 1:2, 
+                   x = list(x = range_factor(physio_in_mod$x),
+                            y = range(c(physio_in_mod$resp, 
+                                        ps$lowerCI, 
+                                        ps$upperCI),
+                                      na.rm = TRUE))), 
+            type = "n",
+            main = resp)
+add_error_bars(physio_in_mod$x, fit = ps$fit, lwr = ps$lowerCI, upr = ps$upperCI)
+points(physio_in_mod$x, physio_in_mod$resp, col = "red")
 
 
 ################################
@@ -371,38 +407,54 @@ tidy_write(summaries, "./fig/blood_summaries.txt")
 
 #### Define tidy coefficient tables derived from mod_1 for each parameter
 # Define sample ("1" for BS1 and "2" for BS2)
-sample_for_coefs <- "1" # "2"
+sample_for_coefs <- "2" # "2"
 coefs <- 
   lapply(paste0(resps, "_", sample_for_coefs), function(resp){
     # Fit model and get the number of observations used for model fitting
-    print(resp)
-    physio$resp <- physio[, resp]
-    mod         <- glm(form_1, family = gaussian(link = "log"), data = physio)
-    n_mod       <- nrow(model.frame(mod))
-    # Extract tidy summary table 
-    coef_tbl <- 
-      utils.add::tidy_coef(coef = coef(summary(mod)), 
-                           coef_names = coef_names, 
-                           col_names = c("Coefficient", "Estimate", 
-                                         "SE", "t-value", "p-value")
-      )
-    # Add parameter names and deviance explained
-    coef_tbl <-
-      cbind(data.frame(Parameter = 
-                         resps_names$name[match(substr(resp, 1, nchar(resp) - 2), 
-                                                resps_names$resp)], 
-                       Nmod = nrow(model.frame(mod))), 
-            coef_tbl, 
-            data.frame(D = utils.add::dev_expl(mod)))
-    coef_tbl$D <- add_lagging_point_zero(round(coef_tbl$D, 3), 3)
-    # coef_tbl[2:nrow(coef_tbl), c("Parameter", "Nmod", "D")] <- NA
-    return(coef_tbl)
+    # (... excluding K_2 and Mg_2 due to a lack of data)
+    if(!(resp %in% c("K_2", "Mg_2"))){
+      print(resp)
+      physio$resp <- physio[, resp]
+      mod         <- glm(form_1, family = gaussian(link = "log"), data = physio)
+      n_mod       <- nrow(model.frame(mod))
+      # Extract tidy summary table 
+      coef_tbl <- 
+        utils.add::tidy_coef(coef = coef(summary(mod)), 
+                             coef_names = coef_names, 
+                             col_names = c("Coefficient", "Estimate", 
+                                           "SE", "t-value", "p-value")
+        )
+      # Add parameter names and deviance explained
+      coef_tbl <-
+        cbind(data.frame(Parameter = 
+                           resps_names$name[match(substr(resp, 1, nchar(resp) - 2), 
+                                                  resps_names$resp)], 
+                         Nmod = nrow(model.frame(mod))), 
+              coef_tbl, 
+              data.frame(D = utils.add::dev_expl(mod)))
+      coef_tbl$D <- add_lagging_point_zero(round(coef_tbl$D, 3), 3)
+      # coef_tbl[2:nrow(coef_tbl), c("Parameter", "Nmod", "D")] <- NA
+      return(coef_tbl)
+    } else return(NULL)
   }) %>% dplyr::bind_rows()
 # Write tidy table of coefficients to file 
 tidy_write(coefs, 
            paste0("./fig/blood_coefs_", sample, ".txt"),
            na = "")
 
+#### Summary statistics for deviance explained
+# ( -> comment out `coef_tbl$D <- add_lagging_point_zero(...)` above)
+if(!inherits(coefs$D, "character")) 
+  utils.add::basic_stats(coefs$D, na.rm = TRUE)
+## BS1
+# min  mean median   max    sd  IQR  MAD
+# 10.06 41.79  42.03 66.33 18.93 20.7 21.8
+## BS2
+# min  mean median   max    sd   IQR   MAD
+# 25.84 37.55  35.57 51.39 10.47 15.69 11.44
+
+### Visual examination of coefs
+# Add p-value stars to facilitate visual checking
 coefs$star <- ""
 coefs$star[as.numeric(coefs$`p-value`) <= 0.05] <- "*"
 # View(coefs)
