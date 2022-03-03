@@ -259,7 +259,9 @@ legend(legend_pos,
        lty = c(1, 1),
        col = c("royalblue", "darkred"), 
        lwd = c(1.5, 1.5),
-       legend = c(expression(Time[H %->% S[min]]), expression(Time[H %->% S[max]])),
+       legend = c(expression("Time (" * H %->% S * ")" * ""[min]), 
+                  expression("Time (" * H %->% S * ")" * ""[max])
+                  ),
        adj = legend_adj,
        bty = "n")
 
