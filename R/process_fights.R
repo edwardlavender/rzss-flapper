@@ -232,6 +232,15 @@ range(as.Date(fights$time_stamp))
 table(fights$sex)
 # F  M 
 # 31 30 
+pretty_plot(fights$size_len, fights$size_disc, 
+            xlab = "Total length [cm]", ylab = "Disc width [cm]")
+mod_1 <- lm(size_disc ~ size_len, data = fights)
+predict(mod_1, data.frame(size_len = 229), se.fit = TRUE, response = TRUE)
+# 175.569 ± 1.828898 cm standard error 
+pp <- par(mfrow = c(1, 2))
+plot(mod_1, which = 1:2)
+par(pp)
+
 utils.add::basic_stats(fights$size_len, na.rm = TRUE)
 # min   mean median max    sd IQR   MAD
 # 112 177.57    183 229 34.19  51 41.51
