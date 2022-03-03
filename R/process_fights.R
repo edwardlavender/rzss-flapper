@@ -175,7 +175,33 @@ if(run){
 
 #### Read skeleton captures dataframe
 fights <- readxl::read_excel("./data-raw/skate/captures.xlsx", sheet = "data")
-fights$event_id <- 1:nrow(fights)
+fights$sheet_index <- as.integer(fights$sheet_index)
+fights$event_id    <- fights$sheet_index
+# fights$event_id    <- 1:nrow(fights)
+# identical(fights$event_id, fights$sheet_index) # TRUE
+
+#### Process PIT tag IDs
+## Compare pit IDs in fights versus 'physio' by matching the last four digits
+fights$pit   <- as.character(fights$pit)
+physio$pit   <- as.character(physio$pit)
+fights$pit_4 <- utils.add::substr_end(fights$pit, 4)
+physio$pit_4 <- utils.add::substr_end(physio$pit, 4)
+physio$pit_f     <- as.character(fights$pit[pmatch(physio$pit_4, fights$pit_4)])
+physio$identical <- physio$pit == physio$pit_f
+physio$identical_2 <- identical(utils.add::substr_end(physio$pit, nchar(physio$pit_f)), 
+                                physio$pit_f)
+## Manual checking
+# ... Non matches are due to the absence of a leading '0' or '00' in fights
+# View(physio[!physio$identical, c("pit", "pit_f", "identical", "identical_2")])
+## Add leading zeros in fights where necessary by simply updating pit tags in 
+# ... fights to numbers in physio, where available 
+fights$pit_2 <- physio$pit[match(fights$pit, physio$pit_f)]
+# View(fights[, c("pit", "pit_2")])
+fights$pit_2[is.na(fights$pit_2)] <- fights$pit[is.na(fights$pit_2)]
+## Rename columns
+fights$pit_raw <- fights$pit    # raw pit IDs
+fights$pit     <- fights$pit_2  # full pit IDs
+fights$pit_2   <- NULL
 
 #### Define column classes
 str(fights)
@@ -272,6 +298,8 @@ table(fights$tag)
 #### Add the average heart/respiratory rate for each event 
 fights$hr <- NA
 fights$rr <- NA
+rates$event_id_2 <- fights$event_id[match(rates$sheet_name, fights$sheet_name)]
+identical(rates$event_id, rates$event_id_2) # TRUE
 for(i in 1:nrow(fights)){
   if(fights$event_id[i] %in% rates$event_id){
     fights$event_id[i] %in% rates$event_id
