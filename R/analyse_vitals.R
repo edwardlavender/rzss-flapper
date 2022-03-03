@@ -205,7 +205,7 @@ xlabs <- c("Sex",
            expression("Temperature [" * degree * "C]"), 
            expression("Time (hook" %->% "surface) [mins]"), 
            "Gaff", 
-           "Time on deck [mins]"
+           "Time [mins]"
 )
 xlab_line = 2.25
 main_adj  <- 0
@@ -400,7 +400,7 @@ lapply(1:length(rates_for_resp_by_event), function(i){
   do.call(graphics::axis, axis_ls[[4]]$axis)
   mtext(side = 3, text = paste0("[", rate$event_id_int, "]"), line = -2, font = main_font)
 }) %>% invisible()
-mtext(side = 1, "Time on deck [mins]", line = 4, outer = TRUE, cex = 1.5)
+mtext(side = 1, "Time [mins]", line = 4, outer = TRUE, cex = 1.5)
 mtext(side = 2, ylab, line = 4, outer = TRUE, cex = 1.5)
 par(pp)
 dev.off()
