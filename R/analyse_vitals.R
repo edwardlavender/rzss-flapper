@@ -76,7 +76,7 @@ psych::pairs.panels(rates[, c("hr", "rr",
 )])
 
 #### Define response variable
-resp <- "hr" # "hr"
+resp <- "rr" # "hr"
 rates$resp <- rates[, resp]
 rates_for_resp <- rates[, c("event_id_int", "event_id", 
                             "resp", 
@@ -197,33 +197,32 @@ predict(mod,
 if(save) png(paste0("./fig/", resp, ".png"), 
              height = 5.5, width = 9, units = "in", res = 600)
 pp <- par(mfrow = c(2, 3), oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
-rates_in_mod <- model.frame(mod)
 
-## Define titles
+## Define graphical param
+# Define data used for model fitting
+rates_in_mod <- model.frame(mod)
+# Define titles
 xlabs <- c("Sex", 
            "Length [cm]", 
            expression("Temperature [" * degree * "C]"), 
            expression("Time (hook" %->% "surface) [mins]"), 
            "Gaff", 
            "Time [mins]"
-)
-xlab_line = 2.25
+           )
+# Define title param
+xlab_line <- 2.25
 main_adj  <- 0
 main_font <- 2
-
-## Define point colours, shapes and sizes
-col_param <- pretty_cols_brewer(zlim = range(rates_in_mod$temp_water), 
-                                scheme = "RdYlBu",
-                                rev = TRUE
-                                )
-col_param$col <- scales::alpha(col_param$col, 0.5)
-rates_in_mod$pt_col <- col_param$col[findInterval(rates_in_mod$temp_water, col_param$breaks)]
-# rates_in_mod$pt_col <- c("royalblue", "black")[rates_in_mod$sex]
-rates_in_mod$pt_cex <- rates_in_mod$size_len/225
-rates_in_mod$pt_pch <- 21 # c(1, 4)[rates_in_mod$sex]
-pt_param <- list(col = rates_in_mod$pt_col, 
+# Define point colours, shapes and sizes
+rates_in_mod$pt_pch <- 21 
+rates_in_mod$pt_cex <- 0.75
+pt_param <- list(col = scales::alpha("black", 0.75),
                  cex = rates_in_mod$pt_cex, 
-                 pch = rates_in_mod$pt_pch)
+                 pch = rates_in_mod$pt_pch, 
+                 lwd = 0.75)
+# Adjust error bar parameters
+ebars_param$lwd          <- 1.5
+ebars_param$add_fit$lwd <- 1.5
 
 ## Plot predictions for sex
 pretty_predictions_1d(model = mod, 
@@ -270,9 +269,23 @@ add_error_envelope(p_d$temp_water,
                    add_ci = list(col = scales::alpha("red", 0.2), border = FALSE)
 )
 add_pt <- pt_param
-add_pt$x <- rates_for_resp$temp_water
-add_pt$y <- rates_for_resp$resp
+add_pt$x   <- rates_for_resp$temp_water
+add_pt$y   <- rates_for_resp$resp
+add_pt$cex <- rates_for_resp$time_from_capture_to_surface/20
+px <- par(xpd = NA)
 do.call(points, add_pt)
+par(px)
+legend_pos <- "topleft"
+legend_adj <- 0.1
+if(resp %in% c("pH_1", "HCO3_1", "pH_2")) legend_pos <- "bottomleft"
+legend(legend_pos,
+       lty = c(1, 1),
+       col = c("royalblue", "darkred"), 
+       lwd = c(1.5, 1.5),
+       legend = c(expression(Time[H %->% S[min]]), expression(Time[H %->% S[max]])),
+       adj = legend_adj,
+       bty = "n")
+
 
 ## Plot predictions for fight time (by temperature)
 # Define prediction data 
@@ -310,7 +323,15 @@ add_error_envelope(p_d$time_from_capture_to_surface,
 add_pt <- pt_param
 add_pt$x <- rates_for_resp$time_from_capture_to_surface
 add_pt$y <- rates_for_resp$resp
+add_pt$cex <- rates_for_resp$temp_water/10
 do.call(points, add_pt)
+legend_pos <- "topright"
+legend(legend_pos, 
+       lty = c(1, 1),
+       col = c("royalblue", "darkred"), 
+       legend = c(expression(T[min]), expression(T[max])), 
+       adj = legend_adj,
+       bty = "n")
 
 ## Plot predictions for GAFF and handling time 
 pretty_predictions_1d(model = mod, 
