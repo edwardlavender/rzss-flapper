@@ -34,7 +34,7 @@ set.seed(1)
 #### Set up simulations 
 
 #### Define blood sample ("1" or "2") and response variables
-sample <- "1"
+sample <- "2"
 if(sample == "1"){
   resps_for_bs <- paste0(resps, "_1")
 } else if(sample == "2"){
@@ -211,7 +211,8 @@ outsims <-
   dplyr::bind_rows() %>%
   dplyr::mutate(comparison = factor(comparison, levels = names(comparisons)), 
                 resp       = factor(resp, levels = resps_for_bs)) %>%
-  dplyr::arrange(comparison, resp)
+  dplyr::arrange(comparison, resp) %>%
+  dplyr::filter(!(resp %in% c("K_2", "Mg_2")))
 
 #### Define simulation IDs (for the x axis)
 outsims <- 
@@ -230,7 +231,7 @@ outsims$col <- cols[outsims$comparison]
 #### Set up plot to save
 png(paste0("./fig/blood_ratios_", sample, ".png"), 
     height = 6, width = 6, units = "in", res = 600)
-pp <- par(mfrow = c(4, 2), 
+pp <- par(mfrow = c(length(unique(outsims$resp))/2, 2), 
           oma = c(2, 2, 2, 2), mar = c(2, 2, 2, 0)
           )
 
@@ -238,14 +239,16 @@ pp <- par(mfrow = c(4, 2),
 outsims_by_resps <- split(outsims, outsims$resp)
 lapply(1:length(outsims_by_resps), function(i){
   outsim <- outsims_by_resps[[i]]
+  resp  <- as.character(outsim$resp[1])
+  resp  <- substr(resp, 1, nchar(resp) - 2)
   if(!all(is.na(outsim$ratio))){
     axis_ls <- 
       pretty_plot(outsim$comparison, outsim$ratio, 
-                  # ylim = c(0, NA),
+                  ylim = ylims_ratios[[resp]],
                   pretty_axis_args = 
                   list(x = list(x = outsim$comparison[1:2], 
                                 y = range(c(outsim$lowerCI, outsim$upperCI), na.rm = TRUE)),
-                       pretty = list(list(n = 10), list(n = 3, high.u.bias = 1)), 
+                       pretty = list(list(n = 10), list(n = 4)), 
                        add = FALSE),
                   xlab = "", ylab = "",
                   type = "n")
@@ -259,8 +262,6 @@ lapply(1:length(outsims_by_resps), function(i){
     
     axis_ls[[1]]$axis$labels <- labels
     pretty_axis(axis_ls = axis_ls, add = TRUE)
-    resp  <- as.character(outsim$resp[1])
-    resp  <- substr(resp, 1, nchar(resp) - 2)
     title <- titles[[resp]]
     mtext(side = 3, title, font = 2, adj = 0.03, line = 0.25)
   }
