@@ -191,7 +191,12 @@ physio$identical <- physio$pit == physio$pit_f
 physio$identical_2 <- identical(utils.add::substr_end(physio$pit, nchar(physio$pit_f)), 
                                 physio$pit_f)
 ## Manual checking
-# ... Non matches are due to the absence of a leading '0' or '00' in fights
+# ... Non matches are due to the absence of a leading '0' or '00' in fights7
+# ... These result not from differences between the raw data 
+# ... (Skate acoustic tagging data .xlsx) and the processed data 
+# ... (Skate acoustic tagging data shared.xlsx > Data without all formulas)
+# ... but from leading zeros being dropped in Excel when the csv file was written above. 
+# ... We will fix this post-hoc below. 
 # View(physio[!physio$identical, c("pit", "pit_f", "identical", "identical_2")])
 ## Add leading zeros in fights where necessary by simply updating pit tags in 
 # ... fights to numbers in physio, where available 
