@@ -97,7 +97,9 @@ rates <-
                 )
 
 #### Define event IDs
-rates$event_id <- as.integer(factor(rates$sheet_name))
+# Note these are defined by sheet index to match the capture fight event IDs
+# ... see process_fights.R
+rates$event_id <- as.integer(rates$sheet_index)
 
 #### Fix pit names
 ## Fix .. in PIT names 
