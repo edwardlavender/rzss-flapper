@@ -89,13 +89,13 @@ if(run){
     # time on hook
     time         <- get_time(rates_raw, "Time on hook")
     # time at surface
-    # time_surface <- get_time(rates_raw, "Time at boat side")
+    time_surface <- get_time(rates_raw, "Time at boat side")
     # time on deck
-    # time_deck    <- get_time(rates_raw, "Time on deck")
+    time_deck    <- get_time(rates_raw, "Time on deck")
     # time of BS1
-    # time_bs1     <- get_time(rates_raw, "Time blood sample 1")
+    time_bs1     <- get_time(rates_raw, "Time blood sample 1")
     # time of BS2
-    # time_bs2     <- get_time(rates_raw, "Time blood sample 2")
+    time_bs2     <- get_time(rates_raw, "Time blood sample 2")
     # release time 
     time_release <- get_time(rates_raw, "Time back in water")
     
@@ -105,7 +105,6 @@ if(run){
     } else {
       time_stamp <- NA
     }
-    '
     if(!is.na(time_surface)){
       time_surface   <- as.POSIXct(paste0(date, time_surface), tz = "UTC")
     } else {
@@ -126,7 +125,6 @@ if(run){
     } else {
       time_bs2 <- NA
     }
-    '
     if(!is.na(time_release)){
       time_release <- as.POSIXct(paste0(date, time_release), tz = "UTC")
     } else {
@@ -138,9 +136,9 @@ if(run){
                       sheet_index  = i,
                       pit          = pit,
                       time_stamp   = time_stamp, 
-                      # time_hook    = time_stamp,
-                      # time_surface = time_surface,
-                      # time_deck    = time_deck,
+                      time_hook    = time_stamp,
+                      time_surface = time_surface,
+                      time_deck    = time_deck,
                       # time_bs1     = time_bs1, 
                       # time_bs2     = time_bs2,
                       time_release = time_release,
@@ -216,7 +214,7 @@ fights$pit <- factor(fights$pit)
 #### Save full set of capture event IDs
 fights$date <- as.Date(fights$time_stamp)
 fights$key  <- paste0(fights$pit, "-", fights$date)
-saveRDS(fights[, c("sheet_name", "pit", "date", "key", "event_id")], 
+saveRDS(fights, 
         "./data/skate/capture_events.rds")
 
 #### Summary statistics
@@ -227,7 +225,19 @@ length(levels(fights$pit))
 # One individual (29241467) was caught twice: 
 names(which(table(fights$pit) == 2))
 ## Captures occurred from "2018-08-01" to "2020-03-20"
+# Capture dates 
 range(as.Date(fights$time_stamp))
+# The time of day of recorded events is sensible
+range(Tools4ETS::hour_dbl(fights$time_hook))
+range(Tools4ETS::hour_dbl(fights$time_surface))
+range(Tools4ETS::hour_dbl(fights$time_deck))
+range(Tools4ETS::hour_dbl(fights$time_release), na.rm = TRUE)
+range(difftime(fights$time_release, fights$time_deck, units = "mins"), na.rm = TRUE)
+range(difftime(fights$time_deck, fights$time_surface, units = "mins"))
+range(difftime(fights$time_surface, fights$time_hook, units = "mins"))
+# Fix obvious typo:
+pos <- which(difftime(fights$time_release, fights$time_deck, units = "mins") == 88)
+fights$time_release[pos] <- as.POSIXct("2020-03-06 15:37:00", tz = "UTC")
 ## Sexes and body sizes 
 table(fights$sex)
 # F  M 
