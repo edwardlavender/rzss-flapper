@@ -7,7 +7,8 @@
 
 #### Steps preceding this script: 
 # 1) Define global parameters (define_global_param.R)
-# 2) Process vital signs      (process_vitals.R)
+# 2) Process capture fights   (process_fights.R)
+# 3) Process vital signs      (process_vitals.R)
 
 
 ################################
@@ -26,20 +27,34 @@ library(ggplot2)
 save <- TRUE
 
 #### Load data 
-rates <- readRDS("./data/skate/rates.rds")
+captures <- readRDS("./data/skate/capture_events.rds")
+rates    <- readRDS("./data/skate/rates.rds")
 
 
 ################################
 ################################
 #### Data processing
 
-#### Order by time_index
+#### Order by time stamp
 rates$event_id_int <- rates$event_id
 rates$event_id     <- factor(rates$event_id)
 rates <- 
   rates %>% 
-  dplyr::arrange(event_id, time_index) %>%
+  dplyr::arrange(event_id, time_stamp) %>%
   data.frame()
+
+#### Define the times of key events
+rates$time_surface              <- captures$time_surface[match(rates$event_id, captures$event_id)]
+rates$time_deck                 <- captures$time_deck[match(rates$event_id, captures$event_id)]
+rates$time_from_surface_to_deck <- as.integer(difftime(rates$time_deck, 
+                                                       rates$time_surface, 
+                                                       units = "mins"))
+rates$time_from_deck_to_obs     <- as.integer(difftime(rates$time_stamp, 
+                                                       rates$time_deck, 
+                                                       units = "mins"))
+range(rates$time_from_surface_to_deck)
+range(rates$time_from_deck_to_obs)
+rates <- rates[rates$time_from_deck_to_obs > 0, ]
 
 
 ################################
@@ -69,20 +84,21 @@ psych::pairs.panels(rates[, c("hr", "rr",
                               "sex", 
                               "size_len", 
                               "time_from_capture_to_surface", 
+                              "time_from_surface_to_deck",
                               "temp_water", 
                               "gaff", 
-                              "healthy", 
-                              "time_index"
+                              "healthy"
 )])
 
 #### Define response variable
-resp <- "rr" # "hr"
+resp <- "hr" # "hr"
 rates$resp <- rates[, resp]
 rates_for_resp <- rates[, c("event_id_int", "event_id", 
                             "resp", 
                             "sex", "size_len", 
                             "time_from_capture_to_surface", "temp_water", 
-                            "gaff", "time_index")]
+                            "time_from_surface_to_deck",
+                            "gaff", "time_from_deck_to_obs")]
 rates_for_resp <- rates_for_resp[complete.cases(rates_for_resp), ]
 rates_for_resp$event_id <- factor(rates_for_resp$event_id)
 if(resp == "rr"){
@@ -118,10 +134,10 @@ rates_for_resp %>%
 
 #### Period of observations
 # There are only few observations after more than 20 minutes
-hist(rates$time_index)
+hist(rates$time_from_deck_to_obs)
 # Examine evidence for change during handling 
 ggplot() +
-  geom_point(aes(x = time_index, y = resp), data = rates_for_resp) + 
+  geom_point(aes(x = time_from_deck_to_obs, y = resp), data = rates_for_resp) + 
   facet_wrap(~event_id)
 
 
@@ -134,17 +150,20 @@ ggplot() +
 
 #### Implement model(s)
 mod_1 <- gam(resp ~ 
-               sex + size_len + temp_water * time_from_capture_to_surface + 
+               sex + size_len + 
+               temp_water * time_from_capture_to_surface + 
+               time_from_surface_to_deck + 
                gaff + 
                s(event_id, bs = "re") +
-               s(event_id, time_index, bs = "re"),
+               s(event_id, time_from_deck_to_obs, bs = "re"),
              family = nb(),
              data = rates_for_resp, 
              method = "REML")
 mod_2 <- gam(resp ~ 
                sex + temp_water * time_from_capture_to_surface + 
+               time_from_surface_to_deck + 
                gaff + 
-               te(size_len, time_index),
+               te(size_len, time_from_deck_to_obs),
              family = nb(),
              data = rates_for_resp, 
              method = "REML")
@@ -184,10 +203,11 @@ predict(mod,
                                           max(rates_for_resp$size_len[ind_f])),
                              time_from_capture_to_surface = median(rates_for_resp$time_from_capture_to_surface), 
                              temp_water = median(rates_for_resp$temp_water), 
+                             time_from_surface_to_deck = median(rates_for_resp$time_from_surface_to_deck),
                              gaff = factor("N", levels = c("N", "Y")), 
                              event_id = factor(levels(rates_for_resp$event_id)[1], 
                                                levels = levels(rates_for_resp$event_id)),
-                             time_index = min(rates_for_resp$time_index)),
+                             time_from_deck_to_obs = min(rates_for_resp$time_from_deck_to_obs)),
         type = "response",
         se.fit = TRUE)
 
@@ -195,8 +215,8 @@ predict(mod,
 
 ## Set up figure to save
 if(save) png(paste0("./fig/", resp, ".png"), 
-             height = 5.5, width = 9, units = "in", res = 600)
-pp <- par(mfrow = c(2, 3), oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
+             height = 4.5, width = 10, units = "in", res = 600)
+pp <- par(mfrow = c(2, 4), oma = c(2, 3, 2, 2), mar = rep(2, 4))
 
 ## Define graphical param
 # Define data used for model fitting
@@ -206,8 +226,9 @@ xlabs <- c("Sex",
            "Length [cm]", 
            expression("Temperature [" * degree * "C]"), 
            expression("Time (hook" %->% "surface) [mins]"), 
+           expression("Time (surface" %->% "deck) [mins]"),
            "Gaff", 
-           "Time [mins]"
+           expression("Time (deck" %->% "observation) [mins]")
            )
 # Define title param
 xlab_line <- 2.25
@@ -247,7 +268,8 @@ p_d$sex        <- factor("F", levels = c("F", "M"))
 p_d$size_len   <- mean(rates_for_resp$size_len)
 p_d$gaff       <- factor("N", levels = c("N", "F"))
 p_d$event_id   <- factor(levels(rates_for_resp$event_id)[1], levels = levels(rates_for_resp$event_id))
-p_d$time_index <- 1
+p_d$time_from_surface_to_deck <- median(rates_for_resp$time_from_surface_to_deck)
+p_d$time_from_deck_to_obs     <- median(rates_for_resp$time_from_deck_to_obs)
 # Plot predictions for effects of temperature when fight time is low 
 pretty_predictions_1d(model = mod, 
                       newdata = p_d[p_d$time_from_capture_to_surface == min(rates_for_resp$time_from_capture_to_surface), ],
@@ -286,7 +308,6 @@ legend(legend_pos,
        adj = legend_adj,
        bty = "n")
 
-
 ## Plot predictions for fight time (by temperature)
 # Define prediction data 
 p_n <- 100
@@ -299,7 +320,8 @@ p_d$sex        <- factor("F", levels = c("F", "M"))
 p_d$size_len   <- mean(rates_for_resp$size_len)
 p_d$gaff       <- factor("N", levels = c("N", "F"))
 p_d$event_id   <- factor(levels(rates_for_resp$event_id)[1], levels = levels(rates_for_resp$event_id))
-p_d$time_index <- 1
+p_d$time_from_surface_to_deck <- median(rates_for_resp$time_from_surface_to_deck)
+p_d$time_from_deck_to_obs     <- median(rates_for_resp$time_from_deck_to_obs)
 # Plot predictions for effects of fight time in low temperatures 
 pretty_predictions_1d(model = mod, 
                       newdata = p_d[p_d$temp_water == min(rates_for_resp$temp_water), ],
@@ -333,15 +355,16 @@ legend(legend_pos,
        adj = legend_adj,
        bty = "n")
 
-## Plot predictions for GAFF and handling time 
+## Plot predictions for surface time, gaff and and handling time 
 pretty_predictions_1d(model = mod, 
-                      x_var =  c("gaff", "time_index"),
+                      x_var =  c("time_from_surface_to_deck", "gaff", "time_from_deck_to_obs"),
                       add_error_bars = ebars_param,
                       add_points = pt_param,
-                      add_xlab = list(text = xlabs[5:6], line = xlab_line),
+                      add_xlab = list(text = xlabs[5:7], line = xlab_line),
                       add_ylab = NULL,
-                      add_main = list(text = c("E", "F"), adj = main_adj, font = main_font), 
+                      add_main = list(text = c("E", "F", "G"), adj = main_adj, font = main_font), 
                       one_page = FALSE)
+mtext(side = 2, ylab, line = 1, outer = TRUE, cex = 1)
 par(pp)
 if(save) dev.off()
 
@@ -383,13 +406,13 @@ lapply(1:length(rates_for_resp_by_event), function(i){
     paa <- list(side = 1:4, 
                 pretty = list(list(n = 3), list(n = 5)),
                 control_axis = list(tck = 0.02, las = TRUE, cex.axis = cex.axis),
-                x = list(x = range(rate$time_index),
+                x = list(x = range(rate$time_from_deck_to_obs),
                          y = range(c(rate$resp, pred$lowerCI, pred$upperCI))))
   } else {
     paa <- list(side = 1:4, 
                 pretty = list(list(n = 3), list(n = 5)),
                 control_axis = list(tck = 0.02, las = TRUE, cex.axis = cex.axis),
-                x = list(x = range(rates_for_resp$time_index), 
+                x = list(x = range(rates_for_resp$time_from_deck_to_obs), 
                          y = range(rates_for_resp$resp)))
   }
   paa$add <- FALSE
@@ -397,14 +420,14 @@ lapply(1:length(rates_for_resp_by_event), function(i){
   xlim <- axis_ls[[1]]$lim
   ylim <- axis_ls[[2]]$lim
   # Create blank plot
-  plot(rate$time_index, rate$resp, 
+  plot(rate$time_from_deck_to_obs, rate$resp, 
        xlim = xlim, ylim = ylim,
        axes = FALSE, 
        xlab = "", ylab = "",
        type = "n")
   # Add predictions and observations 
-  add_error_envelope(rate$time_index, pred)
-  points(rate$time_index, rate$resp)
+  add_error_envelope(rate$time_from_deck_to_obs, pred)
+  points(rate$time_from_deck_to_obs, rate$resp)
   # Add axes 
   # rect(xlim[1], ylim[1], xlim[2], ylim[2])
   axis_ls[[1]]$axis$labels[length(axis_ls[[1]]$axis$labels)] <- ""
@@ -421,7 +444,8 @@ lapply(1:length(rates_for_resp_by_event), function(i){
   do.call(graphics::axis, axis_ls[[4]]$axis)
   mtext(side = 3, text = paste0("[", rate$event_id_int, "]"), line = -2, font = main_font)
 }) %>% invisible()
-mtext(side = 1, "Time [mins]", line = 4, outer = TRUE, cex = 1.5)
+mtext(side = 1, expression("Time (deck" %->% "observation) [mins]"), 
+      line = 4, outer = TRUE, cex = 1.5)
 mtext(side = 2, ylab, line = 4, outer = TRUE, cex = 1.5)
 par(pp)
 dev.off()
