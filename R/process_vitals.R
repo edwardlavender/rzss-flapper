@@ -150,6 +150,7 @@ rates <- rates[!is.na(rates$hh_mm_ss), ]
 rates$yyyy_mm_dd <- lubridate::dmy(rates$date)
 rates$time_stamp <- as.POSIXct(paste0(rates$yyyy_mm_dd, rates$hh_mm_ss), tz = "UTC")
 range(rates$time_stamp, na.rm = TRUE)
+range(Tools4ETS::hour_dbl(rates$time_stamp))
 
 #### Define universal time index
 rates <- 
