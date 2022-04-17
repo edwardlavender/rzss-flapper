@@ -177,6 +177,8 @@ fights$sheet_index <- as.integer(fights$sheet_index)
 fights$event_id    <- fights$sheet_index
 # fights$event_id    <- 1:nrow(fights)
 # identical(fights$event_id, fights$sheet_index) # TRUE
+table(is.na(fights$time_fight))
+utils.add::basic_stats(fights$time_fight)
 
 #### Process PIT tag IDs
 ## Compare pit IDs in fights versus 'physio' by matching the last four digits
@@ -189,7 +191,7 @@ physio$identical <- physio$pit == physio$pit_f
 physio$identical_2 <- identical(utils.add::substr_end(physio$pit, nchar(physio$pit_f)), 
                                 physio$pit_f)
 ## Manual checking
-# ... Non matches are due to the absence of a leading '0' or '00' in fights7
+# ... Non matches are due to the absence of a leading '0' or '00' in fights
 # ... These result not from differences between the raw data 
 # ... (Skate acoustic tagging data .xlsx) and the processed data 
 # ... (Skate acoustic tagging data shared.xlsx > Data without all formulas)
@@ -235,22 +237,16 @@ range(Tools4ETS::hour_dbl(fights$time_release), na.rm = TRUE)
 range(difftime(fights$time_release, fights$time_deck, units = "mins"), na.rm = TRUE)
 range(difftime(fights$time_deck, fights$time_surface, units = "mins"))
 range(difftime(fights$time_surface, fights$time_hook, units = "mins"))
-# Fix obvious typo:
-pos <- which(difftime(fights$time_release, fights$time_deck, units = "mins") == 88)
-fights$time_release[pos] <- as.POSIXct("2020-03-06 15:37:00", tz = "UTC")
 ## Sexes and body sizes 
 table(fights$sex)
 # F  M 
-# 31 30 
+# 31 31 
 pretty_plot(fights$size_len, fights$size_disc, 
             xlab = "Total length [cm]", ylab = "Disc width [cm]")
 mod_1 <- lm(size_disc ~ size_len, data = fights)
-predict(mod_1, data.frame(size_len = 229), se.fit = TRUE, response = TRUE)
-# 175.569 ± 1.828898 cm standard error 
 pp <- par(mfrow = c(1, 2))
 plot(mod_1, which = 1:2)
 par(pp)
-
 utils.add::basic_stats(fights$size_len, na.rm = TRUE)
 # min   mean median max    sd IQR   MAD
 # 112 177.57    183 229 34.19  51 41.51
@@ -561,10 +557,10 @@ if(visual_check){
 ## The number of excluded records: 
 table(fights$check_3)
 # FALSE  TRUE 
-# 36     7 
+# 35     8 
 ## Exclude fight times for these individuals:
 fights <- fights[-which(fights$check_3), ]
-nrow(fights) # 36
+nrow(fights) # 35
 
 #### Save processed fights dataframe
 saveRDS(fights, "./data/skate/fights.rds")
