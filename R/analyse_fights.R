@@ -97,7 +97,7 @@ if(save) dev.off()
 #### Model predictions 
 ## Pretty x axis labels 
 xlabs <- c("Sex", 
-           expression("Surface area [" * m^2 * "]"), 
+           expression("Size [" * m^2 * "]"), 
            expression("Current speed [" * ms^-1 * "]"), 
            expression("Sun angle [" * degree * "]"), 
            expression("Temperature [" * degree * "C]"), 
@@ -108,6 +108,7 @@ if(save) png("./fig/fight_time.png",
              height = 5.5, width = 9, units = "in", res = 600)
 pp <- par(oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
 pretty_predictions_1d(model = mod, 
+                      average = median,
                       add_points = list(cex = fights$size_area, lwd = 0.5, col = "grey20"),
                       add_error_bars = ebars_param,
                       add_xlab = list(text = xlabs, line = 2.75),
