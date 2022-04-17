@@ -6,7 +6,7 @@
 # 1) Analyses skate blood parameters. 
 
 #### Steps preceding this script: 
-# 1) Define global parameters (define_global_param.R)
+# 1) Define global parameters (define_global_param.R) 
 # 2) Process bloods           (process_bloods.R)
 
 
@@ -19,7 +19,7 @@ source("./R/define_global_param.R")
 
 #### Load data
 physio <- readRDS("./data/skate/physio.rds")
-
+nrow(physio)
 
 #### Define local parameters
 # Define whether or not to save figures
@@ -38,7 +38,7 @@ physio <- physio[physio$healthy == 1, ]
 
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"  
-yvar   <- "lac"
+yvar   <- "Mg"
 sample <- "2"
 resp   <- paste0(yvar, "_", sample)
 
@@ -170,7 +170,7 @@ physio_in_mod <- model.frame(mod)
 ylim <- ylims[[substr(resp, 1, nchar(resp) - 2)]]
 # Define titles
 xlabs <- c("Sex", 
-           "Length [cm]", 
+           "Size [cm]", 
            expression("Temperature [" * degree * "C]"), 
            expression("Time (hook" %->% "surface) [mins]"), 
            expression("Time (surface" %->% "BS1) [mins]"),
@@ -259,8 +259,8 @@ legend(legend_pos,
        lty = c(1, 1),
        col = c("royalblue", "darkred"), 
        lwd = c(1.5, 1.5),
-       legend = c(expression("Time (" * H %->% S * ")" * ""[min]), 
-                  expression("Time (" * H %->% S * ")" * ""[max])
+       legend = c(expression(T[L]), 
+                  expression(T[H])
                   ),
        adj = legend_adj,
        bty = "n")
@@ -313,7 +313,7 @@ if(resp %in% c("PCO2_2")) legend_pos <- "topright"
 legend(legend_pos, 
        lty = c(1, 1),
        col = c("royalblue", "darkred"), 
-       legend = c(expression(T[min]), expression(T[max])), 
+       legend = c(expression(FT[L]), expression(FT[H])), 
        adj = legend_adj,
        bty = "n")
 
@@ -331,6 +331,9 @@ pretty_predictions_1d(model = mod,
                       add_main = list(text = c("E", "F"), adj = main_adj, font = main_font), 
                       one_page = FALSE)
 par(pp)
+
+## Global titles 
+mtext(side = 2, ylabs[[substr(resp, 1, nchar(resp) - 2)]], line = 2.5)
 if(save) dev.off()
 
 
@@ -435,13 +438,13 @@ coefs <-
               coef_tbl, 
               data.frame(D = utils.add::dev_expl(mod)))
       coef_tbl$D <- add_lagging_point_zero(round(coef_tbl$D, 3), 3)
-      # coef_tbl[2:nrow(coef_tbl), c("Parameter", "Nmod", "D")] <- NA
+      coef_tbl[2:nrow(coef_tbl), c("Parameter", "Nmod", "D")] <- NA
       return(coef_tbl)
     } else return(NULL)
   }) %>% dplyr::bind_rows()
 # Write tidy table of coefficients to file 
 tidy_write(coefs, 
-           paste0("./fig/blood_coefs_", sample, ".txt"),
+           paste0("./fig/blood_coefs_", sample_for_coefs, ".txt"),
            na = "")
 
 #### Summary statistics for deviance explained
@@ -450,10 +453,10 @@ if(!inherits(coefs$D, "character"))
   utils.add::basic_stats(coefs$D, na.rm = TRUE)
 ## BS1
 # min  mean median   max    sd  IQR  MAD
-# 10.06 41.79  42.03 66.33 18.93 20.7 21.8
+# 10.06 41.79  42.03 66.33 17.85 20.7 21.8
 ## BS2
 # min  mean median   max    sd   IQR   MAD
-# 25.84 37.55  35.57 51.39 10.47 15.69 11.44
+# 25.84 37.55  35.57 51.39 9.66 17.2 11.44
 
 ### Visual examination of coefs
 # Add p-value stars to facilitate visual checking

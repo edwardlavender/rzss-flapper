@@ -75,7 +75,7 @@ utils.add::basic_stats(rates$rr, na.rm = TRUE)
 ind_cor <- !is.na(rates$hr) & !is.na(rates$rr)
 length(which(ind_cor))
 h <- cor.test(rates$hr[ind_cor], rates$rr[ind_cor], method = "spearman")
-# 0.5280126
+# 0.5547736
 
 #### Correlations 
 # Note the relatively high (negative) correlation 
@@ -178,8 +178,8 @@ message(round(max(ranks$AIC) - min(ranks$AIC), digits = 2))
 message(rownames(ranks)[which.min(ranks$AIC)])
 mod <- get(rownames(ranks)[which.min(ranks$AIC)])
 mod <- mod_1
-# hr: delta AIC = 17.5
-# rr: delta AIC = 113.36
+# hr: delta AIC = 15.6
+# rr: delta AIC = 112.23
 
 #### Model summary
 summary(mod, digits = 3)
@@ -209,7 +209,8 @@ predict(mod,
                                                levels = levels(rates_for_resp$event_id)),
                              time_from_deck_to_obs = min(rates_for_resp$time_from_deck_to_obs)),
         type = "response",
-        se.fit = TRUE)
+        se.fit = TRUE) %>% 
+  list_CIs()
 
 #### Visualise model predictions for each variable 
 
@@ -223,7 +224,7 @@ pp <- par(mfrow = c(2, 4), oma = c(2, 3, 2, 2), mar = rep(2, 4))
 rates_in_mod <- model.frame(mod)
 # Define titles
 xlabs <- c("Sex", 
-           "Length [cm]", 
+           "Size [cm]", 
            expression("Temperature [" * degree * "C]"), 
            expression("Time (hook" %->% "surface) [mins]"), 
            expression("Time (surface" %->% "deck) [mins]"),
@@ -242,7 +243,7 @@ pt_param <- list(col = scales::alpha("black", 0.75),
                  pch = rates_in_mod$pt_pch, 
                  lwd = 0.75)
 # Adjust error bar parameters
-ebars_param$lwd          <- 1.5
+ebars_param$lwd         <- 1.5
 ebars_param$add_fit$lwd <- 1.5
 
 ## Plot predictions for sex
@@ -304,7 +305,7 @@ legend(legend_pos,
        lty = c(1, 1),
        col = c("royalblue", "darkred"), 
        lwd = c(1.5, 1.5),
-       legend = c(expression(Time[H %->% S[min]]), expression(Time[H %->% S[max]])),
+       legend = c(expression(T[L]), expression(T[H])),
        adj = legend_adj,
        bty = "n")
 
@@ -345,13 +346,13 @@ add_error_envelope(p_d$time_from_capture_to_surface,
 add_pt <- pt_param
 add_pt$x <- rates_for_resp$time_from_capture_to_surface
 add_pt$y <- rates_for_resp$resp
-add_pt$cex <- rates_for_resp$temp_water/10
+add_pt$cex <- rates_for_resp$temp_water/12.5
 do.call(points, add_pt)
 legend_pos <- "topright"
 legend(legend_pos, 
        lty = c(1, 1),
        col = c("royalblue", "darkred"), 
-       legend = c(expression(T[min]), expression(T[max])), 
+       legend = c(expression(FT[L]), expression(FT[H])), 
        adj = legend_adj,
        bty = "n")
 
