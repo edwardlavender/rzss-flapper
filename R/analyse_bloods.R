@@ -20,6 +20,7 @@ source("./R/define_global_param.R")
 #### Load data
 physio <- readRDS("./data/skate/physio.rds")
 nrow(physio)
+captures <- readRDS("./data/skate/capture_events.rds")
 
 #### Define local parameters
 # Define whether or not to save figures
@@ -29,6 +30,19 @@ save <- TRUE
 ################################
 ################################
 #### Data processing 
+
+#### Define the times of key events
+all(physio$pit %in% captures$pit)
+physio$key   <- paste0(physio$pit, "-", physio$date)
+captures$key <- paste0(captures$pit, "-", captures$date)
+all(physio$key %in% captures$key)
+physio$event_id                  <- captures$event_id[match(physio$key, captures$key)]
+physio$time_surface              <- captures$time_surface[match(physio$event_id, captures$event_id)]
+physio$time_deck                 <- captures$time_deck[match(physio$event_id, captures$event_id)]
+physio$time_from_surface_to_deck <- as.integer(difftime(physio$time_deck, 
+                                                       physio$time_surface, 
+                                                       units = "mins"))
+utils.add::basic_stats(physio$time_from_surface_to_deck)
 
 #### Define dataset
 # Focus on healthy or unhealthy individuals
