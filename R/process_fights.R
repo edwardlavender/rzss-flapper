@@ -252,11 +252,13 @@ utils.add::basic_stats(fights$size_len, na.rm = TRUE)
 # 112 177.57    183 229 34.19  51 41.51
 tapply(fights$size_len, factor(fights$sex), utils.add::basic_stats, na.rm = TRUE)
 ## Handling time in relation to temperature
-fights$time_handling <- as.integer(difftime(fights$time_release, fights$time_stamp))
-pretty_plot(fights$temp_water,fights$time_handling)
+# fights$time_handling <- as.integer(difftime(fights$time_release, fights$time_stamp))
+fights$time_handling <- as.integer(difftime(fights$time_release, fights$time_deck))
+pretty_plot(fights$temp_water, fights$time_handling)
 mod_1 <- glm(time_handling ~ temp_water, 
              family = gaussian(link = "log"), 
              data = fights)
+nrow(model.frame(mod_1))
 pretty_predictions_1d(mod_1, x_var = "temp_water")
 list_CIs(predict(mod_1, 
                  newdata = data.frame(temp_water = c(min(fights$temp_water), max(fights$temp_water))), 
