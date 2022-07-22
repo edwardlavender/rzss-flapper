@@ -52,7 +52,7 @@ physio <- physio[physio$healthy == 1, ]
 
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"  
-yvar   <- "Mg"
+yvar   <- "PO2"
 sample <- "2"
 resp   <- paste0(yvar, "_", sample)
 
@@ -156,10 +156,10 @@ coef_names <- c("Intercept",
                 "Sex (M)", 
                 "Size", 
                 "Temperature", 
-                "Time (capture → surface)", 
+                "Time (hook → surface)", 
                 "Time (surface → sample)", 
                 "Gaff (Y)", 
-                "Temperature: Time (capture → surface)")
+                "Temperature: Time (hook → surface)")
 coef_tbl <- utils.add::tidy_coef(coef = coef(summary(mod)), 
                                  coef_names = coef_names, 
                                  col_names = c("Coefficient", "Estimate", "SE", "t-value", "p-value"))
@@ -425,10 +425,8 @@ summaries <- tidy_numbers(summaries, digits = 2)
 tidy_write(summaries, "./fig/blood_summaries.txt")
 
 #### Define tidy coefficient tables derived from mod_1 for each parameter
-# Define sample ("1" for BS1 and "2" for BS2)
-sample_for_coefs <- "2" # "2"
 coefs <- 
-  lapply(paste0(resps, "_", sample_for_coefs), function(resp){
+  lapply(paste0(resps, "_", sample), function(resp){
     # Fit model and get the number of observations used for model fitting
     # (... excluding K_2 and Mg_2 due to a lack of data)
     if(!(resp %in% c("K_2", "Mg_2"))){
@@ -448,7 +446,7 @@ coefs <-
         cbind(data.frame(Parameter = 
                            resps_names$name[match(substr(resp, 1, nchar(resp) - 2), 
                                                   resps_names$resp)], 
-                         Nmod = nrow(model.frame(mod))), 
+                         Nmod = n_mod), 
               coef_tbl, 
               data.frame(D = utils.add::dev_expl(mod)))
       coef_tbl$D <- add_lagging_point_zero(round(coef_tbl$D, 3), 3)
@@ -458,7 +456,7 @@ coefs <-
   }) %>% dplyr::bind_rows()
 # Write tidy table of coefficients to file 
 tidy_write(coefs, 
-           paste0("./fig/blood_coefs_", sample_for_coefs, ".txt"),
+           paste0("./fig/blood_coefs_", sample, ".txt"),
            na = "")
 
 #### Summary statistics for deviance explained
