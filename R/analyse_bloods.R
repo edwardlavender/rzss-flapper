@@ -1,6 +1,6 @@
 ################################
 ################################
-#### analyse_bloods_synthesis.R
+#### analyse_bloods.R
 
 #### This script: 
 # 1) Analyses skate blood parameters. 
@@ -53,7 +53,7 @@ physio <- physio[physio$healthy == 1, ]
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"  
 yvar   <- "PO2"
-sample <- "2"
+sample <- "1"
 resp   <- paste0(yvar, "_", sample)
 
 #### Focus on specific columns
@@ -90,18 +90,6 @@ if(sample == 1){
     temp_water * 
     time_from_capture_to_surface + time_from_surface_to_bs1 + 
     gaff
-  form_2 <- resp ~ 
-    sex + 
-    size_len + 
-    temp_water +
-    time_from_capture_to_surface + time_from_surface_to_bs1 + 
-    gaff
-  form_3 <- resp ~ 
-    sex + 
-    size_len + 
-    temp_water +
-    time_from_capture_to_bs1 + 
-    gaff
 } else if(sample == 2){
   form_1 <- resp ~
     sex + 
@@ -109,44 +97,20 @@ if(sample == 1){
     temp_water * 
     time_from_capture_to_surface + time_from_surface_to_bs2 + 
     gaff
-  form_2 <- resp ~ 
-    sex + 
-    size_len + 
-    temp_water +
-    time_from_capture_to_surface + time_from_surface_to_bs2 + 
-    gaff
-  form_3 <- resp ~ 
-    sex + 
-    size_len + 
-    temp_water +
-    time_from_capture_to_bs2 + 
-    gaff
 }
 
 #### Model fitting 
-mod_1 <- glm(form_1, family = gaussian(link = "log"), data = physior)
-mod_2 <- glm(form_2, family = gaussian(link = "log"), data = physior)
-mod_3 <- glm(form_3, family = gaussian(link = "log"), data = physior)
-summary(mod_1)
-summary(mod_2)
-summary(mod_3)
+mod <- glm(form_1, family = gaussian(link = "log"), data = physior)
 
 
 ################################
 ################################
-#### Model comparison/summaries
+#### Model summaries
 
-#### Model comparison
-( ranks <- AIC(mod_1, mod_2) ) # ( ranks <- AIC(mod_1, mod_2, mod_3) )
-message(round(max(ranks$AIC) - min(ranks$AIC), digits = 2))
-message(rownames(ranks)[which.min(ranks$AIC)])
-mod <- get(rownames(ranks)[which.min(ranks$AIC)])
-mod <- mod_1
-
-#### Model summary
+#### Model summary (raw)
 # raw number of observations (incl NA) versus number used for model fitting:
 nrow(physior); nrow(model.frame(mod))
-# summary
+# model summary
 summary(mod)
 # deviance explained
 # utils.add::dev_expl(mod)
@@ -160,9 +124,10 @@ coef_names <- c("Intercept",
                 "Time (surface → sample)", 
                 "Gaff (Y)", 
                 "Temperature: Time (hook → surface)")
-coef_tbl <- utils.add::tidy_coef(coef = coef(summary(mod)), 
-                                 coef_names = coef_names, 
-                                 col_names = c("Coefficient", "Estimate", "SE", "t-value", "p-value"))
+coef_tbl <- 
+  utils.add::tidy_coef(coef = coef(summary(mod)), 
+                       coef_names = coef_names, 
+                       col_names = c("Coefficient", "Estimate", "SE", "t-value", "p-value"))
 tidy_write(coef_tbl, paste0("./fig/", resp, "_coef.txt"))
 
 
