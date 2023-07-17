@@ -153,7 +153,7 @@ p_by_param <-
       ## Run paired t test and check shapiro.test for normality 
       # Some variables have Shapiro p <= 0.05, 
       # ... implying the assumption of normality is not met
-      tt  <- t.test(bs2, bs1, allternative = alt, paired = TRUE)
+      tt  <- t.test(bs2, bs1, alternative = alt, paired = TRUE)
       sh  <- shapiro.test(bs1 - bs2)
       message("Shapiro: ", round(sh$p.value, 2))
       

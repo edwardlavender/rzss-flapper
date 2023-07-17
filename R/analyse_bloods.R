@@ -382,7 +382,7 @@ colnames(summaries) <-
   stringr::str_replace_all(colnames(summaries), "_2", " [2]")
 summaries$Parameter <- 
   resps_names$name[match(summaries$Parameter, resps_names$resp)]
-## Examine the range in the number of obserations across parameters for BS1/2
+## Examine the range in the number of observations across parameters for BS1/2
 utils.add::basic_stats(summaries$`Nobs [1]`)
 utils.add::basic_stats(summaries$`Nobs [2]`)
 ## Write tidy table to file 

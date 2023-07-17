@@ -162,7 +162,7 @@ if(run){
           #### Implement bootstrap to estimate ratios
           # Use tryCatch because for some variables (e.g., K_2)
           # ... there are too few observation (e.g., for Gaff 'Y') to 
-          # ... implement bootrstrapping. In the sampling proceedure, 
+          # ... implement bootstrapping. In the sampling proceedure, 
           # ... observations are dropped and the model can't fit
           # ... because gaffing has only one factor level. 
           ratio <- tryCatch({
