@@ -22,10 +22,12 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
+library(dv)
 library(prettyGraphics)
-source(here_r("002_define_helpers.R"))
 
 #### Load data
+source(here_r("001_define_global_param.R"))
+source(here_r("002_define_helpers.R"))
 physio <- readxl::read_excel("./data-raw/skate/Skate data analysis shared.xlsx",
   sheet = "Data all without formulas"
 )

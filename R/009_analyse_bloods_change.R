@@ -20,15 +20,17 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
+library(dv)
 library(prettyGraphics)
-source(here_r("002_define_helpers.R"))
+# source(here_r("002_define_helpers.R"))
 
 #### Load data
+source(here_r("001_define_global_param.R"))
 physio <- readRDS("./data/skate/physio.rds")
 
 #### Define local parameters
 # Define whether or not to save figures
-save <- TRUE
+save <- FALSE
 
 
 #########################

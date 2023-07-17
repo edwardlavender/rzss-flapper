@@ -22,11 +22,13 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
+library(dv)
 library(prettyGraphics)
 library(lubridate)
-source(here_r("002_define_helpers.R"))
 
 #### Load data
+source(here_r("001_define_global_param.R"))
+source(here_r("002_define_helpers.R"))
 # processed rates/physio data as a source of capture IDs, dates etc.
 rates <- readRDS("./data/skate/rates.rds")
 physio <- readRDS("./data/skate/physio.rds")
@@ -52,10 +54,12 @@ wgs84 <- sp::CRS(SRS_string = "EPSG:4326")
 #### Define skeleton capture fights dataframe
 run <- FALSE
 if (run) {
+  
   #### Define a list of capture records containing capture locations and time
   sheets <- readxl::excel_sheets(con)
   sheets <- sheets[1:(length(sheets) - 3)]
   xy_raw_by_sheet <- pbapply::pblapply(seq_along(sheets), function(i) {
+    
     ## Load sheet for capture event
     print(i)
     sheet <- sheets[i]

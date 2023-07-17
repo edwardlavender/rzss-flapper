@@ -21,18 +21,19 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
+library(dv)
 library(prettyGraphics)
 library(mgcv)
 library(ggplot2)
-source(here_r("002_define_helpers.R"))
+
+#### Load data
+source(here_r("001_define_global_param.R"))
+captures <- readRDS("./data/skate/capture_events.rds")
+rates    <- readRDS("./data/skate/rates.rds")
 
 #### Define local parameters
 # Define whether or not to save figures
-save <- TRUE
-
-#### Load data
-captures <- readRDS("./data/skate/capture_events.rds")
-rates    <- readRDS("./data/skate/rates.rds")
+save <- FALSE
 
 
 #########################

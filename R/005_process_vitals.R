@@ -23,7 +23,6 @@ dv::clear()
 #### Essential packages
 library(prettyGraphics)
 library(ggplot2)
-source(here_r("002_define_helpers.R"))
 
 #### Load data
 # Load capture event data

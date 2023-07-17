@@ -20,10 +20,11 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
+library(dv)
 library(prettyGraphics)
-source(here_r("002_define_helpers.R"))
 
 #### Load data
+source(here_r("001_define_global_param.R"))
 fights <- readRDS("./data/skate/fights.rds")
 
 #### Define local parameters

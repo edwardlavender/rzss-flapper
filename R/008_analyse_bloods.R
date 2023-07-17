@@ -20,17 +20,17 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
+library(dv)
 library(prettyGraphics)
-source(here_r("002_define_helpers.R"))
 
 #### Load data
-physio <- readRDS("./data/skate/physio.rds")
-nrow(physio)
+source(here_r("001_define_global_param.R"))
+physio   <- readRDS("./data/skate/physio.rds")
 captures <- readRDS("./data/skate/capture_events.rds")
 
 #### Define local parameters
 # Define whether or not to save figures
-save <- TRUE
+save <- FALSE
 
 
 #########################
@@ -38,6 +38,7 @@ save <- TRUE
 #### Data processing
 
 #### Define the times of key events
+nrow(physio)
 all(physio$pit %in% captures$pit)
 physio$key <- paste0(physio$pit, "-", physio$date)
 captures$key <- paste0(captures$pit, "-", captures$date)
