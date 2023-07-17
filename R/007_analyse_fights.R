@@ -1,21 +1,29 @@
-################################
-################################
+#########################
+#########################
 #### analyse_fights.R
 
-#### This code:
+#### Aims
 # 1) Analyses fight time.
 
-#### Steps preceding this code:
+#### Prerequisites
 # 1) Define global parameters (define_global_param.R)
 # 2) Process capture fights   (process_fights.R)
 
 
-################################
-################################
+#########################
+#########################
 #### Set up
 
-#### Wipe workspace and source essential packages and variables
-source("./R/define_global_param.R")
+#### Wipe workspace
+rm(list = ls()) 
+try(pacman::p_unload("all"), silent = TRUE) 
+dv::clear() 
+
+#### Essential packages
+library(magrittr)
+library(prettyGraphics)
+library(ggplot2)
+source(here_r("002_define_helpers.R"))
 
 #### Load data
 fights <- readRDS("./data/skate/fights.rds")
@@ -25,8 +33,8 @@ fights <- readRDS("./data/skate/fights.rds")
 save <- TRUE
 
 
-################################
-################################
+#########################
+#########################
 #### Data exploration
 
 #### Indices for healthy/non healthy individuals
@@ -50,8 +58,8 @@ psych::pairs.panels(fights[, c(
 )])
 
 
-################################
-################################
+#########################
+#########################
 #### Modelling
 
 #### Focus on healthy individuals
@@ -134,5 +142,5 @@ if (save) dev.off()
 
 
 #### End of code.
-################################
-################################
+#########################
+#########################

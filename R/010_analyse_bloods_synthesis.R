@@ -1,23 +1,31 @@
-################################
-################################
+#########################
+#########################
 #### analyse_bloods_synthesis.R
 
-#### This code:
+#### Aims
 # 1) Synthesises the effects of each variable on
 # ... blood parameters using a simulation approach.
 
-#### Steps preceding this code:
+#### Prerequisites
 # 1) Define global parameters   (define_global_param.R)
 # 2) Process bloods             (process_bloods.R)
 # 3) Develop modelling approach (analyse_bloods.R)
 
 
-################################
-################################
+#########################
+#########################
 #### Set up
 
-#### Wipe workspace and source essential packages and variables
-source("./R/define_global_param.R")
+#### Wipe workspace
+rm(list = ls()) 
+try(pacman::p_unload("all"), silent = TRUE) 
+dv::clear() 
+
+#### Essential packages
+library(magrittr)
+library(prettyGraphics)
+library(ggplot2)
+source(here_r("002_define_helpers.R"))
 
 #### Load data
 physio <- readRDS("./data/skate/physio.rds")
@@ -26,8 +34,8 @@ physio <- readRDS("./data/skate/physio.rds")
 set.seed(1)
 
 
-################################
-################################
+#########################
+#########################
 #### Implement simulations
 
 ################################
@@ -302,5 +310,6 @@ par(pp)
 dev.off()
 
 
-################################
-################################
+#### End of code. 
+#########################
+#########################

@@ -1,21 +1,28 @@
-################################
-################################
+#########################
+#########################
 #### analyse_bloods.R
 
-#### This script:
+#### Aims
 # 1) Analyses skate blood parameters.
 
-#### Steps preceding this script:
+#### Prerequisites
 # 1) Define global parameters (define_global_param.R)
 # 2) Process bloods           (process_bloods.R)
 
 
-################################
-################################
+#########################
+#########################
 #### Set up
 
-#### Wipe workspace and source essential packages and variables
-source("./R/define_global_param.R")
+#### Wipe workspace
+rm(list = ls()) 
+try(pacman::p_unload("all"), silent = TRUE) 
+dv::clear() 
+
+#### Essential packages
+library(magrittr)
+library(prettyGraphics)
+source(here_r("002_define_helpers.R"))
 
 #### Load data
 physio <- readRDS("./data/skate/physio.rds")
@@ -27,8 +34,8 @@ captures <- readRDS("./data/skate/capture_events.rds")
 save <- TRUE
 
 
-################################
-################################
+#########################
+#########################
 #### Data processing
 
 #### Define the times of key events
@@ -70,8 +77,8 @@ physior <- physio[, colnames(physio) %in% c(covars, resp)]
 physior$resp <- physio[, resp]
 
 
-################################
-################################
+#########################
+#########################
 #### Data exploration
 
 #### Distribution of response
@@ -81,8 +88,8 @@ utils.add::basic_stats(physior[, resp], na.rm = TRUE)
 psych::pairs.panels(physior)
 
 
-################################
-################################
+#########################
+#########################
 #### Implement modelling
 
 #### Model formulae
@@ -106,8 +113,8 @@ if (sample == 1) {
 mod <- glm(form_1, family = gaussian(link = "log"), data = physior)
 
 
-################################
-################################
+#########################
+#########################
 #### Model summaries
 
 #### Model summary (raw)
@@ -139,8 +146,8 @@ coef_tbl <-
 tidy_write(coef_tbl, paste0("./fig/", resp, "_coef.txt"))
 
 
-################################
-################################
+#########################
+#########################
 #### Model predictions
 
 #### Visualise model predictions for each variable
@@ -346,8 +353,8 @@ mtext(side = 2, ylabs[[substr(resp, 1, nchar(resp) - 2)]], line = 2.5)
 if (save) dev.off()
 
 
-################################
-################################
+#########################
+#########################
 #### Model diagnostics
 
 #### Model residuals
@@ -388,8 +395,8 @@ add_error_bars(physio_in_mod$x, fit = ps$fit, lwr = ps$lowerCI, upr = ps$upperCI
 points(physio_in_mod$x, physio_in_mod$resp, col = "red")
 
 
-################################
-################################
+#########################
+#########################
 #### Collective model tables
 
 #### Define a summary table for blood parameters (for BS1 and BS2)
@@ -502,5 +509,5 @@ coefs$star[as.numeric(coefs$`p-value`) <= 0.05] <- "*"
 
 
 #### End of code.
-################################
-################################
+#########################
+#########################

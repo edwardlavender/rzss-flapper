@@ -1,50 +1,17 @@
-################################
-################################
+#########################
+#########################
 #### define_global_param.R
 
-#### This code:
-# 1) Wipes the workspace, loads essential packages
-# ... and defines parameters used by multiple scripts.
-# ... This is designed to be called at the start of every script.
+#### Aims
+# 1) Defines global parameters
 
-#### Steps preceding this code:
+#### Prerequisites
 # 1) NA
 
 
-################################
-################################
-#### Global set up
-
-#### Wipe workspace
-rm(list = ls())
-
-#### Essential packages
-library(magrittr)
-library(prettyGraphics)
-
-
-################################
-################################
+#########################
+#########################
 #### Define global parameters
-
-#### Data processing functions
-contains_qu <- function(x) stringi::stri_detect_fixed(x, "?")
-contains_less_than <- function(x) stringi::stri_detect_fixed(x, "<")
-get_time <- function(rates_raw, stage = "Time on hook") {
-  rates_raw_is_time <- apply(
-    rates_raw,
-    2,
-    function(x) stringr::str_detect(x, stage)
-  )
-  anchor <- which(rates_raw_is_time, arr.ind = TRUE)
-  stopifnot(nrow(anchor) >= 1L)
-  anchor <- anchor[1, , drop = FALSE]
-  stopifnot(nrow(anchor) == 1L)
-  anchor[, 2] <- anchor[, 2] + 1
-  time <- rates_raw[anchor]
-  time <- chron::times(as.numeric(time))
-}
-
 
 #### Response variables
 ## Define core list of response variables
@@ -91,10 +58,10 @@ ylabs_legend <- c(
 )
 ## Check all labels
 # Check ylabs
-labs_check <- TRUE
+labs_check <- FALSE
 if (labs_check) {
   plot_labs <- function(labs) {
-    pp <- par(mfrow = par_mf(length(resps)))
+    pp <- par(mfrow = prettyGraphics::par_mf(length(resps)))
     for (i in 1:length(resps)) {
       if (inherits(labs, "list")) {
         plot(0, main = labs[[i]])
@@ -142,5 +109,5 @@ ebars_param <- list(
 
 
 #### End of code.
-################################
-################################
+#########################
+#########################

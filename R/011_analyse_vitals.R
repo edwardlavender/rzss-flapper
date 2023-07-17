@@ -1,26 +1,31 @@
-################################
-################################
+#########################
+#########################
 #### analyse_vitals.R
 
-#### This script:
+#### Aims
 # 1) Analyses skate vital signs.
 
-#### Steps preceding this script:
+#### Prerequisites
 # 1) Define global parameters (define_global_param.R)
 # 2) Process capture fights   (process_fights.R)
 # 3) Process vital signs      (process_vitals.R)
 
 
-################################
-################################
+#########################
+#########################
 #### Set up
 
-#### Wipe workspace and source essential packages and variables
-source("./R/define_global_param.R")
+#### Wipe workspace
+rm(list = ls()) 
+try(pacman::p_unload("all"), silent = TRUE) 
+dv::clear() 
 
-#### Load required packages
+#### Essential packages
+library(magrittr)
+library(prettyGraphics)
 library(mgcv)
 library(ggplot2)
+source(here_r("002_define_helpers.R"))
 
 #### Define local parameters
 # Define whether or not to save figures
@@ -28,11 +33,11 @@ save <- TRUE
 
 #### Load data
 captures <- readRDS("./data/skate/capture_events.rds")
-rates <- readRDS("./data/skate/rates.rds")
+rates    <- readRDS("./data/skate/rates.rds")
 
 
-################################
-################################
+#########################
+#########################
 #### Data processing
 
 #### Order by time stamp
@@ -59,8 +64,8 @@ range(rates$time_from_deck_to_obs)
 rates <- rates[rates$time_from_deck_to_obs > 0, ]
 
 
-################################
-################################
+#########################
+#########################
 #### Data exploration
 
 #### Key questions:
@@ -146,11 +151,11 @@ ggplot() +
   facet_wrap(~event_id)
 
 
-################################
-################################
+#########################
+#########################
 #### Modelling
 
-################################
+#########################
 #### Model fitting
 
 #### Implement model(s)
@@ -178,7 +183,7 @@ mod_2 <- gam(
 )
 
 
-################################
+#########################
 #### Model comparison and summary
 
 #### Model comparison
@@ -198,7 +203,7 @@ summary(mod, digits = 3)
 sink()
 
 
-################################
+#########################
 #### Model predictions
 
 #### Model smooths
@@ -500,7 +505,7 @@ par(pp)
 dev.off()
 
 
-################################
+#########################
 #### Model diagnostics
 
 #### Standard residual diagnostics
@@ -516,5 +521,5 @@ if (save) dev.off()
 
 
 #### End of code.
-################################
-################################
+#########################
+#########################

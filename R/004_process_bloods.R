@@ -1,32 +1,39 @@
-################################
-################################
+#########################
+#########################
 #### process_bloods.R
 
-#### This code:
+#### Aims
 # 1) Processes the raw physiological blood parameters
 # ... for modelling.
 
-#### Steps preceding this code:
+#### Prerequisites
 # 1) Define global parameters (define_global_param.R)
 # 2) Temperature corrections have been applied to physiological parameters,
 # ... using specific elasmobranch values where available, in the raw data.
 
 
-################################
-################################
+#########################
+#########################
 #### Set up
 
-#### Wipe workspace and source essential packages and variables
-source("./R/define_global_param.R")
+#### Wipe workspace
+rm(list = ls()) 
+try(pacman::p_unload("all"), silent = TRUE) 
+dv::clear() 
 
-#### Read data
+#### Essential packages
+library(magrittr)
+library(prettyGraphics)
+source(here_r("002_define_helpers.R"))
+
+#### Load data
 physio <- readxl::read_excel("./data-raw/skate/Skate data analysis shared.xlsx",
   sheet = "Data all without formulas"
 )
 
 
-################################
-################################
+#########################
+#########################
 #### Data processing
 
 #### Drop column explanations
@@ -153,8 +160,8 @@ physio$time_from_capture_to_bs2 <-
   physio$time_from_capture_to_surface + physio$time_from_surface_to_bs1 + physio$time_from_bs1_to_bs2
 
 
-################################
-################################
+#########################
+#########################
 #### Quality checks
 
 #### Check for repeated captures
@@ -183,8 +190,8 @@ sapply(resps, function(resp) length(which(!is.na(physio[, paste0(resp, "_1")])))
 sapply(resps, function(resp) length(which(!is.na(physio[, paste0(resp, "_2")]))))
 
 
-################################
-################################
+#########################
+#########################
 #### Save processed data
 
 #### Save data
@@ -196,5 +203,5 @@ tidy_write(physio_tbl, "./fig/physio_tbl.txt")
 
 
 #### End of code.
-################################
-################################
+#########################
+#########################

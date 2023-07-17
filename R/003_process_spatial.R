@@ -1,8 +1,8 @@
-################################
-################################
+#########################
+#########################
 #### process_spatial.R
 
-#### This code:
+#### Aims
 # 1) Processes spatial data for this project:
 # ... A coastline shapefile is acquired for
 # ... ... checking the accuracy of recorded locations
@@ -10,15 +10,28 @@
 # ... The WeStCOMS mesh is built to obtain predictions at capture locations
 # ... ... in process_fights.R
 
-# 2) Steps preceding this code:
-# ... NA
+#### Prerequisites
+# NA
 
 
-################################
-################################
-#### Process spatial data
+#########################
+#########################
+#### Set up
 
-################################
+#### Wipe workspace
+rm(list = ls()) 
+try(pacman::p_unload("all"), silent = TRUE) 
+dv::clear() 
+
+#### Essential packages
+library(fvcom.tbx)
+
+#### Load data
+# NA
+
+
+#########################
+#########################
 #### Coastline
 
 #### Process coastline data
@@ -40,7 +53,8 @@ raster::plot(fol)
 saveRDS(fol, "./data/spatial/coast.rds")
 
 
-################################
+#########################
+#########################
 #### WeStCOMS mesh
 
 #### Load mesh data
@@ -84,5 +98,5 @@ saveRDS(
 
 
 #### End of code.
-################################
-################################
+#########################
+#########################

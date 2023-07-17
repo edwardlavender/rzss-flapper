@@ -1,21 +1,29 @@
-################################
-################################
+#########################
+#########################
 #### analyse_bloods_change.R
 
-#### This script:
+#### Aims
 # 1) Analyses how skate blood parameters change between BS1 and BS2.
 
-#### Steps preceding this script:
+#### Prerequisites
 # 1) Define global parameters (define_global_param.R)
 # 2) Process raw bloods       (process_bloods.R)
 
 
-################################
-################################
+#########################
+#########################
 #### Set up
 
-#### Wipe workspace and source essential packages and variables
-source("./R/define_global_param.R")
+#### Wipe workspace
+rm(list = ls()) 
+try(pacman::p_unload("all"), silent = TRUE) 
+dv::clear() 
+
+#### Essential packages
+library(magrittr)
+library(prettyGraphics)
+library(ggplot2)
+source(here_r("002_define_helpers.R"))
 
 #### Load data
 physio <- readRDS("./data/skate/physio.rds")
@@ -25,8 +33,8 @@ physio <- readRDS("./data/skate/physio.rds")
 save <- TRUE
 
 
-################################
-################################
+#########################
+#########################
 #### Plot BS1 and BS2
 
 #### Loop over each response and make plots
@@ -84,8 +92,8 @@ par(pp)
 if (save) dev.off()
 
 
-################################
-################################
+#########################
+#########################
 #### Summarise % change during handling
 
 #### Calculate % change in median values of each parameter during handling
@@ -115,8 +123,8 @@ obs_by_param %>%
   tidy_write(file = "./fig/blood_change_tbl.txt")
 
 
-################################
-################################
+#########################
+#########################
 #### Paired statistical tests
 
 #### Summary
@@ -221,5 +229,5 @@ tidy_numbers(p_by_param, 3) %>%
 
 
 #### End of code.
-################################
-################################
+#########################
+#########################

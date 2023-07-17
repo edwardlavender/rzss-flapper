@@ -1,26 +1,31 @@
-################################
-################################
+#########################
+#########################
 #### process_fights.R
 
-#### This code:
+#### Aims
 # 1) Processes fight time data (locations, times and other variables)
 # ... for modelling.
 
-#### Steps preceding this code:
+#### Prerequisites
 # 1) Define global parameters (define_global_param.R)
 # 2) Process vital signs data (process_vitals.R)
 # 3) Process spatial data     (process_spatial.R)
 
 
-################################
-################################
+#########################
+#########################
 #### Set up
 
-#### Wipe workspace and source essential packages and variables
-source("./R/define_global_param.R")
+#### Wipe workspace
+rm(list = ls()) 
+try(pacman::p_unload("all"), silent = TRUE) 
+dv::clear() 
 
 #### Essential packages
+library(magrittr)
+library(prettyGraphics)
 library(lubridate)
+source(here_r("002_define_helpers.R"))
 
 #### Load data
 # processed rates/physio data as a source of capture IDs, dates etc.
@@ -38,11 +43,11 @@ con <- "./data-raw/skate/Skate acoustic tagging data .xlsx"
 wgs84 <- sp::CRS(SRS_string = "EPSG:4326")
 
 
-################################
-################################
+#########################
+#########################
 #### Extract raw capture records (location, time)
 
-################################
+#########################
 #### Define skeleton dataframe
 
 #### Define skeleton capture fights dataframe
@@ -173,7 +178,7 @@ if (run) {
 }
 
 
-################################
+#########################
 #### Examine skeleton dataframe
 
 #### Read skeleton captures dataframe
@@ -441,7 +446,7 @@ pretty_plot(fights$time_stamp, fights$sun,
 table(!is.na(fights$sun))
 # TRUE
 
-################################
+#########################
 #### Get current velocities from WeStCOMS
 
 #### Define WeStCOMS dates/names/times
@@ -600,5 +605,5 @@ saveRDS(fights, "./data/skate/fights.rds")
 
 
 #### End of code.
-################################
-################################
+#########################
+#########################

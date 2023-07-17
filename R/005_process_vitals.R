@@ -1,30 +1,42 @@
-################################
-################################
+#########################
+#########################
 #### process_vitals.R
 
-#### This code:
+#### Aims
 # 1) Processes the vital signs (heart and respiration data)
 # ... for modelling.
 
-#### Steps preceding this code:
+#### Prerequisites
 # 1) Define global parameters                      (define_global_param.R)
 # 2) Processing of capture events/blood parameters (process_bloods.R)
 
 
-################################
-################################
+#########################
+#########################
 #### Set up
 
-#### Wipe workspace and source essential packages and variables
-source("./R/define_global_param.R")
+#### Wipe workspace
+rm(list = ls()) 
+try(pacman::p_unload("all"), silent = TRUE) 
+dv::clear() 
 
 #### Essential packages
+library(magrittr)
+library(prettyGraphics)
 library(ggplot2)
+source(here_r("002_define_helpers.R"))
 
-#### Load capture event data
+#### Load data
+# Load capture event data
 physio <- readRDS("./data/skate/physio.rds")
+# Load vitals data (below)
 
-#### Define local parameters
+
+#########################
+#########################
+#### Load vitals data
+
+#### Define connection
 con <- "./data-raw/skate/Skate acoustic tagging data .xlsx"
 
 #### Define a function to read data
@@ -75,8 +87,8 @@ sheets <- readxl::excel_sheets(con)
 rates_by_id <- read_vitals(sheets[1:(length(sheets) - 3)])
 
 
-################################
-################################
+#########################
+#########################
 #### Data processing
 
 #### Manual inspection
@@ -227,8 +239,8 @@ range(rates$time_index)
 pretty_plot(rates$size_len, rates$size_disc)
 
 
-################################
-################################
+#########################
+#########################
 #### Save processed data
 
 #### Save data
@@ -241,5 +253,5 @@ tidy_write(rates_tbl, "./fig/rates_tbl.txt")
 
 
 #### End of code.
-################################
-################################
+#########################
+#########################
