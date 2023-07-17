@@ -1,21 +1,22 @@
 ---
 title: "Physiological responses to capture and handling in flapper skate (_Dipturus intermedius_)"
-author: Georgina C. Cole^1^, Adam Naylor^1^, Simon J. Girling^1^, Edward Lavender^2,3\*^, Jane Dodd^4^, James A. Thorburn^3^
+author: Georgina C. Cole^1^, Edward Lavender^2,3\*^, Steffen J. Oppel^4^, Adam Naylor^1^, Simon J. Girling^1^, Jane Dodd^5^, James Thorburn^3^
 output: github_document
 ---
 
 [![Project Status: Inactive – The project has reached a stable, usable state but is no longer being actively developed; support/maintenance will be provided as time allows.](https://www.repostatus.org/badges/latest/inactive.svg)](https://www.repostatus.org/#inactive)
 
 ^1^ Royal Zoological Society of Scotland, RZSS Edinburgh Zoo, Scotland  
-^2^  Centre for Research into Ecological and Environmental Modelling, University of St Andrews, Scotland  
-^3^  Scottish Oceans Institute, University of St Andrews, Scotland  
-^4^  NatureScot, Oban, Scotland
+^2^ Centre for Research into Ecological and Environmental Modelling, University of St Andrews, Scotland  
+^3^ Scottish Oceans Institute, University of St Andrews, Scotland  
+^4^ Swiss Ornithological Institute, Sempach, Switzerland  
+^5^ NatureScot, Oban, Scotland
 
 ^\*^ This repository is maintained by Edward Lavender (<el72@st-andrews.ac.uk>).
 
-## Introduction
+# Introduction
 
-This repository contains methods, written in `R` and organised as an `R Project`, for Cole et al. (in prep). Physiological responses to capture and handling in flapper skate (*Dipturus intermedius*).
+This repository contains methods, written in [R](https://www.r-project.org/) and organised as an [RStudio](https://www.rstudio.com/) [Project](https://r4ds.had.co.nz/workflow-projects.html) for Cole et al. (in prep). Physiological responses to capture and handling in flapper skate (*Dipturus intermedius*).
 
 We studied the physiological responses of flapper skate following catch-and-release angling and acoustic tagging in the Loch Sunart to the Sound of Jura Marine Protected Area on the west coast of Scotland (Figure 1). We recorded capture fight times and blood parameters following capture (blood sample one: BS1) and following handling (blood sample two: BS2). Using statistical modelling (as recorded in this repository) we investigated capture fights and relationships between blood parameters (for both BS1 and BS2) and aspects of the capture and handing process (such as fight time), individual characteristics (such as sex) and environmental conditions (such as temperature). This work was conducted as part of the Movement Ecology of Flapper Skate project. 
 
@@ -23,17 +24,29 @@ We studied the physiological responses of flapper skate following catch-and-rele
 
 _Figure 1. A flapper skate is released following capture and handing in the Loch Sunart to the Sound of Jura Marine Protected Area on the west coast of Scotland. Photograph courtesy of the Movement Ecology of Flapper Skate project._
 
-## Structure
+# Description
 
-1.  **`data-raw/`** contains 'raw' data for the project:
+## Dependencies
+
+The project was built in [R](https://www.r-project.org/) (version `r paste0(version$major, ".", version$minor)`) in [RStudio](https://www.rstudio.com/) and implements local dependency management using [`renv`](https://rstudio.github.io/renv/articles/renv.html). This manages the installation of the [`dv`](https://github.com/edwardlavender/dv) package for project management (from [GitHub](https://github.com/)), as well as other packages from the [Comprehensive R Archive Network](https://cran.r-project.org/). The first time the project is opened, [`renv`](https://rstudio.github.io/renv/articles/renv.html) can be used to regenerate the local project library, as described in `renv.lock` (via `.Rprofile` and `renv/activate.R`).
+
+## Directories
+
+The project follows a standardised structure encouraged by the [`dv`](https://github.com/edwardlavender/dv) package. The high-level structure was generated via `dv::use_template_proj()`. The contents as follows:
+
+1.  **`renv/`** implements local dependency management.
+
+2.  **`data-raw/`** contains 'raw' data:
+
       - `skate/` contains skate data: 
           - `Skate acoustic tagging data .xlsx` contains raw data from capture and tagging, including the details of capture events, blood parameters and heart and respiratory rates during handling, with one individual per sheet. This file is used for the fight time, heart and respiratory rate analyses in this project. 
           - `Skate data analysis shared.xlsx` summarises capture events and blood parameters in one place. (This document was collated by G. C. Cole.) The `Data all without formulas` sheet includes capture events, raw blood parameters and temperature-corrected blood parameter values. This sheet is used for the blood parameter analyses in this project. 
       - `spatial/` contains spatial data:
           - `coast/` contains coastline data for the region, sourced from the [Database of Global Administrative Areas](https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_GBR_0_sp.rds); 
-          - `mesh/` contains mesh files for the West Scotland Coastal Ocean Modelling System (WeStCOMS), sourced from [Dmitry Aleynik](https://www.sams.ac.uk/people/researchers/aleynik-dr-dmitry/) at the Scottish Association for Marine Science (SAMS). These files are also available from the [SAMS Thredds Server](https://www.sams.ac.uk/facilities/thredds/); <br/><br/>
+          - `mesh/` contains mesh files for the West Scotland Coastal Ocean Modelling System (WeStCOMS), sourced from [Dmitry Aleynik](https://www.sams.ac.uk/people/researchers/aleynik-dr-dmitry/) at the Scottish Association for Marine Science (SAMS). These files are also available from the [SAMS Thredds Server](https://www.sams.ac.uk/facilities/thredds/); <br/>
       
-2.  **`data/`** contains processed data:
+2.  **`data/`** contains processed data and results:
+
       - `skate/` contains processed skate data:
           - `physio.rds` contains processed blood physiology data from `process_bloods.R` (see below). 
           - `vital.rds` contains processed vital signs data from `process_vitals.R` (see below). 
@@ -42,40 +55,55 @@ _Figure 1. A flapper skate is released following capture and handing in the Loch
           - `bathy/` contains one arc-second bathymetry data from [Digimap](https://digimap.edina.ac.uk) (higher resolution data from the [Ireland, Northern Ireland and Scotland Hydrographic surveys](https://doi.org/10.1017/S1755691015000146) are not available for all sampled locations);
           - `coast/` contains processed coastline data from `process_spatial.R` (see below);
           - `mesh/` contains processed WeStCOMS mesh files from `process_spatial.R` (see below); 
-      - `estimates/` contains model outputs from `analyse_*.R` scripts; <br/><br/>
+      - `estimates/` contains model outputs from `analyse_*.R` scripts; 
+      -   `inst/` contains [RStudio](https://www.rstudio.com/) [Project](https://r4ds.had.co.nz/workflow-projects.html)-management files generated by [`dv`](https://github.com/edwardlavender/dv):
+          -   `tree.rds` is a record of the project directory tree (as generated by `dv::use_template_tree()` in `dev/01-dev.R`, see below); <br/>
 
-3.  **`R/`** contains scripts for data processing and analysis:
+4.  **`R/`** contains `R` scripts for data processing and analysis:
+
       - `define_global_param.R` defines global parameters;
+      - `define_helpers.R` defines helper functions;
+      - `process_spatial.R` processes raw spatial data;
       - `process_bloods.R` processes raw blood parameter data;
       - `process_vitals.R` processes raw vital signs data;
-      - `process_spatial.R` processes raw spatial data;
       - `process_fights.R` processes raw capture fights data;
       - `analyse_fights.R` analyses capture fights;
       - `analyse_bloods.R` analyses BS1 and BS2;
       - `analyse_bloods_change.R` analyses the change in blood parameters during handling;
       - `analyse_bloods_synthesis.R` synthesises results across blood parameters;
-      - `analyse_vitals.R` analyses heart and respiratory rates during handling; <br/><br/>
+      - `analyse_vitals.R` analyses heart and respiratory rates during handling; <br/>
       
-4.  **`fig/`** contains tables and figures.
+5.  **`dev/`** contains project-management scripts:
 
-Note that the `data-raw`, `data` and `fig` directories are not provided in the online version of this repository.
+    -   `01-dev.R` and `02-clone.R` are standard [`dv`](https://github.com/edwardlavender/dv) scripts:
+        -   `01-dev.R` records project set up and development;
+        -   `02-clone.R` is used to clone the project (see 'Instructions'); <br/>
 
-## Workflow
+6.  **`fig/`** contains figures.
 
-1. **Define global parameters** via `define_global_param.R`.
+7.  **`doc/`** contains supporting documents.
 
-2. **Process raw data** via `process_bloods.R`, `process_vitals.R`, `process_spatial.R` and `process_fights.R`. 
+Note that the `data-raw/`, `data/` (except `data/inst/`), `fig/` and `doc` directories are not currently provided in the online version of this repository.
 
-3. **Implement data analysis** via `analyse_fights.R`, `analyse_bloods.R`, `analyse_bloods_change.R`, `analyse_bloods_synthesis.R` and `analyse_vitals.R`. 
+# Instructions
 
-# GitHub packages
+Follow the steps described below to clone the project and reproduce the workflow.
 
-This repository uses a number of non-default packages, available from [The Comprehensive R Archive Network](https://cran.r-project.org). These can be installed with `install.packages()`. Three packages that are only available on [GitHub](https://github.com/) are also used:
+1.  **Clone the project** via GitHub. Follow the instructions in `dev/02-clone.R` to install project packages and create directories:
 
-  - [`fvcom.tbx`](https://github.com/edwardlavender/fvcom.tbx). This package is used to interact with WeStCOMS. 
-  - [`prettyGraphics`](https://github.com/edwardlavender/prettyGraphics). This package is used for plotting, e.g., via `pretty_predictions_1d()`.
-  - [`utils.add`](https://github.com/edwardlavender/utils.add). This package is used for summarising data or function outputs.  
+    -   **Packages.** Open `dev/02-clone.R` to use [`renv`](https://rstudio.github.io/renv/articles/renv.html) to regenerate the local project library. Packages can also be manually reinstalled via `02-clone.R`. (However, note that package versions may differ in this case.)
+    -   **Directories.** Rebuild the project directory tree, via `dv::use_template_proj()` and `dv::use_template_tree()`.
 
-## Citation
+2.  **Obtain raw data** from the authors and/or links provided above
 
-Cole, et al. (in prep). Physiological responses to capture and handling in flapper skate (*Dipturus intermedius*).
+3.  **Define global parameters** via `define_global_param.R` and `define_helpers.R`.
+
+4.  **Process raw data** via  `process_spatial.R`, `process_bloods.R`, `process_vitals.R` and `process_fights.R`. 
+ 
+5.  **Implement data analysis** via `analyse_fights.R`, `analyse_bloods.R`, `analyse_bloods_change.R`, `analyse_bloods_synthesis.R` and `analyse_vitals.R`. 
+
+# Citation
+
+Cole et al. (in prep). Physiological responses to capture and handling in flapper skate (*Dipturus intermedius*).
+
+---
