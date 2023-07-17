@@ -60,8 +60,8 @@ physio <- physio[physio$healthy == 1, ]
 
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
-yvar <- "PO2"
-sample <- "1"
+yvar <- "pH"
+sample <- "2"
 resp <- paste0(yvar, "_", sample)
 
 #### Focus on specific columns
@@ -152,7 +152,7 @@ tidy_write(coef_tbl, paste0("./fig/", resp, "_coef.txt"))
 
 #### Visualise model predictions for each variable
 ## Set up figure to save
-save <- TRUE
+save <- FALSE
 if (save) {
   png(paste0("./fig/", resp, "_preds.png"),
     height = 5.5, width = 9, units = "in", res = 600
@@ -175,7 +175,7 @@ xlabs <- c(
   "Gaff"
 )
 if (sample == 2) {
-  xlabs[3] <- expression("Time (surface" %->% "BS2) [mins]")
+  xlabs[4] <- expression("Time (surface" %->% "BS2) [mins]")
 }
 # Define title param
 xlab_line <- 2.25
