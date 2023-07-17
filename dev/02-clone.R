@@ -25,9 +25,9 @@ renv::restore()
 
 ## B) Install CRAN dependencies (if necessary)
 # This code requires modification if there are packages stored elsewhere
-custom  <- ""
+custom <- ""
 depends <- sort(unique(renv::dependencies()$Package))
-cran    <- depends[!(depends %in% custom)]
+cran <- depends[!(depends %in% custom)]
 renv::install(cran)
 
 

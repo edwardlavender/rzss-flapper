@@ -24,12 +24,15 @@ renv::init()
 #### Install package(s)
 renv::install("edwardlavender/dv")
 # commonmark/(r)markdown packages (for README documentation)
-if (!requireNamespace("commonmark", quietly = TRUE))
+if (!requireNamespace("commonmark", quietly = TRUE)) {
   renv::install("commonmark")
-if (!requireNamespace("markdown", quietly = TRUE))
+}
+if (!requireNamespace("markdown", quietly = TRUE)) {
   renv::install("markdown")
-if (!requireNamespace("rmarkdown", quietly = TRUE))
+}
+if (!requireNamespace("rmarkdown", quietly = TRUE)) {
   renv::install("rmarkdown")
+}
 
 #### Handle 'tricky' installations (e.g. wBoot)
 # Install simpleboot dependency (for wBoot)
@@ -38,8 +41,9 @@ if (!requireNamespace("simpleboot", quietly = TRUE)) {
 }
 # Install wBoot from archive
 if (!requireNamespace("wBoot", quietly = TRUE)) {
-  renv::install("https://cran.r-project.org/src/contrib/Archive/wBoot/wBoot_1.0.3.tar.gz", 
-                type = "source")
+  renv::install("https://cran.r-project.org/src/contrib/Archive/wBoot/wBoot_1.0.3.tar.gz",
+    type = "source"
+  )
 }
 
 
@@ -55,9 +59,11 @@ dv::use_template_gitignore()
 
 #### Add a README and associated files
 usethis::use_code_of_conduct("el72@st-andrews.ac.uk")
-dv::use_template_readme(title = "README",
-                        author = "Edward Lavender",
-                        email = "el72@st-andrews.ac.uk")
+dv::use_template_readme(
+  title = "README",
+  author = "Edward Lavender",
+  email = "el72@st-andrews.ac.uk"
+)
 
 #### Add template scripts
 if (!requireNamespace("pacman", quietly = TRUE)) renv::install("pacman")
