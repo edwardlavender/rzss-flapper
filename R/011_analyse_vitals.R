@@ -23,6 +23,7 @@ dv::clear()
 #### Essential packages
 library(dv)
 library(prettyGraphics)
+library(dplyr)
 library(mgcv)
 library(ggplot2)
 
@@ -245,6 +246,12 @@ pp <- par(mfrow = c(2, 4), oma = c(2, 3, 2, 2), mar = rep(2, 4))
 ## Define graphical param
 # Define data used for model fitting
 rates_in_mod <- model.frame(mod)
+# Check the number of observations during time on deck for each event ID
+rates_in_mod |> 
+  group_by(event_id) |> 
+  summarise(n = n()) |> 
+  pull(n) |> 
+  utils.add::basic_stats()
 # Define titles
 xlabs <- c(
   "Sex",
