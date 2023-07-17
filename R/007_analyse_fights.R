@@ -20,9 +20,7 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
-library(magrittr)
 library(prettyGraphics)
-library(ggplot2)
 source(here_r("002_define_helpers.R"))
 
 #### Load data

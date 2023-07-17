@@ -20,9 +20,7 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
-library(magrittr)
 library(prettyGraphics)
-library(ggplot2)
 source(here_r("002_define_helpers.R"))
 
 #### Load data
@@ -76,9 +74,9 @@ obs_by_param <-
       pretty_axis_args = list(side = 1:2, control_digits = 1)
     )
     points(c(1, 2),
-      dat %>%
-        dplyr::group_by(x) %>%
-        dplyr::summarise(z = mean(y)) %>%
+      dat |>
+        dplyr::group_by(x) |>
+        dplyr::summarise(z = mean(y)) |>
         dplyr::pull(z),
       pch = 3
     )
@@ -86,7 +84,7 @@ obs_by_param <-
     mtext(side = 3, LETTERS[i], font = 2, adj = 0)
     if (prompt) readline("Press [Enter] to continue...")
     return(dat)
-  }) %>% invisible()
+  }) |> invisible()
 mtext(side = 1, "Blood sample", line = 1, outer = TRUE)
 par(pp)
 if (save) dev.off()
@@ -97,29 +95,29 @@ if (save) dev.off()
 #### Summarise % change during handling
 
 #### Calculate % change in median values of each parameter during handling
-obs_by_param %>%
-  dplyr::bind_rows() %>%
-  dplyr::group_by(resp, x) %>%
-  dplyr::summarise(avg = median(y)) %>%
-  dplyr::mutate(resp = factor(resp, levels = resps)) %>%
-  dplyr::arrange(resp, x) %>%
+obs_by_param |>
+  dplyr::bind_rows() |>
+  dplyr::group_by(resp, x) |>
+  dplyr::summarise(avg = median(y)) |>
+  dplyr::mutate(resp = factor(resp, levels = resps)) |>
+  dplyr::arrange(resp, x) |>
   tidyr::pivot_wider(
     names_from = x,
     values_from = avg
-  ) %>%
+  ) |>
   dplyr::mutate(
     difference = BS2 - BS1,
     percentage = (difference / BS1) * 100
-  ) %>%
-  dplyr::arrange(percentage) %>%
+  ) |>
+  dplyr::arrange(percentage) |>
   dplyr::select(
     Par. = resp,
     BS1 = BS1,
     BS2 = BS2,
     `Absolute difference` = difference,
     `Percentage difference` = percentage
-  ) %>%
-  tidy_numbers(digits = 2) %>%
+  ) |>
+  tidy_numbers(digits = 2) |>
   tidy_write(file = "./fig/blood_change_tbl.txt")
 
 
@@ -218,13 +216,13 @@ p_by_param <-
     },
     names(expectations), expectations,
     SIMPLIFY = FALSE
-  ) %>%
+  ) |>
   dplyr::bind_rows()
 ## Adjust p-values using the Bonferroni correction
 p_by_param$`p-value (BC)` <- p.adjust(p_by_param$`p-value`, method = "bonferroni")
 
 #### Write tidy table to file
-tidy_numbers(p_by_param, 3) %>%
+tidy_numbers(p_by_param, 3) |>
   tidy_write("./fig/blood_change_tbl_bootstrap.txt")
 
 

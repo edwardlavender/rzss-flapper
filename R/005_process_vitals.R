@@ -21,7 +21,6 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
-library(magrittr)
 library(prettyGraphics)
 library(ggplot2)
 source(here_r("002_define_helpers.R"))
@@ -104,7 +103,7 @@ if (inspect) {
 
 #### Define dataframe across all individuals
 rates <-
-  do.call(rbind, rates_by_id) %>%
+  do.call(rbind, rates_by_id) |>
   dplyr::select(
     sheet_index = sheet_index,
     sheet_name = sheet_name,
@@ -173,16 +172,16 @@ range(Tools4ETS::hour_dbl(rates$time_stamp))
 
 #### Define universal time index
 rates <-
-  rates %>%
-  dplyr::arrange(event_id, time_stamp) %>%
-  dplyr::group_by(event_id) %>%
+  rates |>
+  dplyr::arrange(event_id, time_stamp) |>
+  dplyr::group_by(event_id) |>
   dplyr::mutate(
     event_index = dplyr::row_number(),
     time_index =
       as.numeric(
         difftime(time_stamp, time_stamp[1], units = "mins")
       )
-  ) %>%
+  ) |>
   dplyr::ungroup()
 # Visual check
 ggplot() +
@@ -210,7 +209,7 @@ rates$healthy <- physio$healthy[match_index]
 
 #### Tidy columns
 rates <-
-  rates %>%
+  rates |>
   dplyr::select(
     event_id,
     sheet_index,
@@ -228,8 +227,8 @@ rates <-
     time_index,
     hr,
     rr
-  ) %>%
-  dplyr::arrange(time_stamp) %>%
+  ) |>
+  dplyr::arrange(time_stamp) |>
   data.frame()
 
 #### Quality checks

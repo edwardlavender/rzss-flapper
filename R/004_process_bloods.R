@@ -22,7 +22,6 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
-library(magrittr)
 library(prettyGraphics)
 source(here_r("002_define_helpers.R"))
 
@@ -41,7 +40,7 @@ physio <- physio[-1, ]
 
 #### Tidy column names for initial convenience
 colnames(physio) <-
-  tolower(colnames(physio)) %>%
+  tolower(colnames(physio)) |>
   stringr::str_replace_all(pattern = " ", replacement = "_")
 
 #### Fix columns with ?
@@ -58,7 +57,7 @@ physio$gaff <- stringr::str_replace_all(physio$gaff, "\\?", "")
 #### Select columns
 # (The list of response variables is defined in define_global_param.R)
 physio <-
-  physio %>%
+  physio |>
   dplyr::select(
     ## capture information
     date = date,
@@ -115,7 +114,7 @@ physio <-
     # Mg
     Mg_1 = mg_1,
     Mg_2 = mg_2
-  ) %>%
+  ) |>
   data.frame()
 
 #### Fix symbols in variable values

@@ -22,9 +22,7 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
-library(magrittr)
 library(prettyGraphics)
-library(ggplot2)
 source(here_r("002_define_helpers.R"))
 
 #### Load data
@@ -233,19 +231,19 @@ if (run) {
 
 #### Collate estimates
 outsims <-
-  outsims %>%
-  dplyr::bind_rows() %>%
+  outsims |>
+  dplyr::bind_rows() |>
   dplyr::mutate(
     comparison = factor(comparison, levels = names(comparisons)),
     resp = factor(resp, levels = resps_for_bs)
-  ) %>%
-  dplyr::arrange(comparison, resp) %>%
+  ) |>
+  dplyr::arrange(comparison, resp) |>
   dplyr::filter(!(resp %in% c("K_2", "Mg_2")))
 
 #### Define simulation IDs (for the x axis)
 outsims <-
-  outsims %>%
-  dplyr::group_by(resp) %>%
+  outsims |>
+  dplyr::group_by(resp) |>
   dplyr::mutate(id = dplyr::row_number())
 
 #### Define colours to distinguish explanatory variables
@@ -301,7 +299,7 @@ lapply(1:length(outsims_by_resps), function(i) {
     title <- titles[[resp]]
     mtext(side = 3, title, font = 2, adj = 0.03, line = 0.25)
   }
-}) %>% invisible()
+}) |> invisible()
 
 #### Add titles
 mtext(side = 1, "Term", outer = TRUE, line = 0.5)

@@ -21,7 +21,6 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
-library(magrittr)
 library(prettyGraphics)
 library(mgcv)
 library(ggplot2)
@@ -44,8 +43,8 @@ rates    <- readRDS("./data/skate/rates.rds")
 rates$event_id_int <- rates$event_id
 rates$event_id <- factor(rates$event_id)
 rates <-
-  rates %>%
-  dplyr::arrange(event_id, time_stamp) %>%
+  rates |>
+  dplyr::arrange(event_id, time_stamp) |>
   data.frame()
 
 #### Define the times of key events
@@ -119,10 +118,10 @@ if (resp == "rr") {
 
 #### Examine the correlation between body size and fight time more closely
 rates_for_time_1 <-
-  rates_for_resp %>%
-  dplyr::group_by(event_id) %>%
-  dplyr::slice(1L) %>%
-  dplyr::filter(!is.na(time_from_capture_to_surface)) %>%
+  rates_for_resp |>
+  dplyr::group_by(event_id) |>
+  dplyr::slice(1L) |>
+  dplyr::filter(!is.na(time_from_capture_to_surface)) |>
   dplyr::filter(!is.na(size_len))
 pretty_plot(rates_for_time_1$time_from_capture_to_surface, rates_for_time_1$size_len)
 cor(rates_for_time_1$time_from_capture_to_surface, rates_for_time_1$size_len)
@@ -133,12 +132,12 @@ cor(rates_for_time_1$time_from_capture_to_surface, rates_for_time_1$size_len)
 # ... 28-29 events are uniquely defined by their size
 # ... ~8 pairs of events share the same size
 # ... ~2 trios of events share the same size
-rates_for_resp %>%
-  dplyr::group_by(event_id) %>%
-  dplyr::slice(1L) %>%
-  dplyr::pull(size_len) %>%
-  table() %>%
-  table() %>%
+rates_for_resp |>
+  dplyr::group_by(event_id) |>
+  dplyr::slice(1L) |>
+  dplyr::pull(size_len) |>
+  table() |>
+  table() |>
   as.numeric() / length(unique(rates_for_resp$size_len))
 # For both variables, 74 % of events are uniquely defined by their size
 
@@ -229,7 +228,7 @@ predict(mod,
   ),
   type = "response",
   se.fit = TRUE
-) %>%
+) |>
   list_CIs()
 
 #### Visualise model predictions for each variable
@@ -495,7 +494,7 @@ lapply(1:length(rates_for_resp_by_event), function(i) {
   do.call(graphics::axis, axis_ls[[2]]$axis)
   do.call(graphics::axis, axis_ls[[4]]$axis)
   mtext(side = 3, text = paste0("[", rate$event_id_int, "]"), line = -2, font = main_font)
-}) %>% invisible()
+}) |> invisible()
 mtext(
   side = 1, expression("Time (deck" %->% "observation) [mins]"),
   line = 4, outer = TRUE, cex = 1.5

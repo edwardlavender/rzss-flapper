@@ -20,7 +20,6 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
-library(magrittr)
 library(prettyGraphics)
 source(here_r("002_define_helpers.R"))
 
@@ -421,10 +420,10 @@ summaries <-
       Med = stat_med,
       Max = stat_max
     )
-  }) %>% dplyr::bind_rows()
+  }) |> dplyr::bind_rows()
 ## Tidy summaries
 summaries <-
-  summaries %>%
+  summaries |>
   tidyr::pivot_wider(
     names_from = Sample,
     values_from = c(Nobs, Min, Med, Max)
@@ -482,7 +481,7 @@ coefs <-
     } else {
       return(NULL)
     }
-  }) %>% dplyr::bind_rows()
+  }) |> dplyr::bind_rows()
 # Write tidy table of coefficients to file
 tidy_write(coefs,
   paste0("./fig/blood_coefs_", sample, ".txt"),

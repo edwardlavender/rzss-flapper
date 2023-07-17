@@ -22,7 +22,6 @@ try(pacman::p_unload("all"), silent = TRUE)
 dv::clear() 
 
 #### Essential packages
-library(magrittr)
 library(prettyGraphics)
 library(lubridate)
 source(here_r("002_define_helpers.R"))
@@ -361,7 +360,7 @@ for (i in 1:length(resps)) {
   fights_tbl[, resps_2[i]] <- dp_2(fights_tbl[, resps_2[i]])
 }
 fights_tbl <-
-  fights_tbl %>%
+  fights_tbl |>
   dplyr::mutate(
     date = format(as.Date(time_stamp), "%y-%m-%d"),
     easting = dp_1(easting),
@@ -369,7 +368,7 @@ fights_tbl <-
   )
 ## Define table with individual characteristics
 fights_tbl_1 <-
-  fights_tbl %>%
+  fights_tbl |>
   dplyr::select(
     ID = event_id,
     Date = date,
@@ -383,7 +382,7 @@ fights_tbl_1 <-
   )
 ## Define blood parameters
 fights_tbl_2 <-
-  fights_tbl %>%
+  fights_tbl |>
   dplyr::select(
     ID         = event_id,
     `pH (1)`   = pH_1,
@@ -436,8 +435,8 @@ table(!is.na(fights$depth))
 
 #### Add sun angles
 data_for_suncalc <-
-  fights %>%
-  dplyr::select(date = time_stamp, lat = lat, lon = lon) %>%
+  fights |>
+  dplyr::select(date = time_stamp, lat = lat, lon = lon) |>
   data.frame()
 fights$sun <- suncalc::getSunlightPosition(data = data_for_suncalc)$altitude * 180 / pi
 pretty_plot(fights$time_stamp, fights$sun,
@@ -482,8 +481,8 @@ if (run) {
         lapply(1:10, function(i) {
           dat$layer <- i
           return(dat)
-        }) %>%
-        dplyr::bind_rows() %>%
+        }) |>
+        dplyr::bind_rows() |>
         dplyr::arrange(date_name, mesh_ID, hour, layer)
 
       ## Define server_catalog for query
@@ -525,11 +524,11 @@ if (run) {
 
 #### Sum current speeds across all layers for each capture event
 velocities <-
-  velocities_by_date %>%
-  dplyr::bind_rows() %>%
-  dplyr::mutate(cs = sqrt(u^2 + v^2)) %>%
-  dplyr::group_by(date_name, mesh_ID) %>%
-  dplyr::mutate(current_speed = mean(cs)) %>%
+  velocities_by_date |>
+  dplyr::bind_rows() |>
+  dplyr::mutate(cs = sqrt(u^2 + v^2)) |>
+  dplyr::group_by(date_name, mesh_ID) |>
+  dplyr::mutate(current_speed = mean(cs)) |>
   dplyr::slice(1L)
 
 #### Add current speed metric to fights dataframe
@@ -587,9 +586,9 @@ fights$check_3 <- fights$check_1 & fights$check_2
 ## Visual check
 visual_check <- FALSE
 if (visual_check) {
-  fights %>%
-    dplyr::arrange(time_stamp) %>%
-    dplyr::select(pit, time_stamp, time_release, check_1, check_2, check_3) %>%
+  fights |>
+    dplyr::arrange(time_stamp) |>
+    dplyr::select(pit, time_stamp, time_release, check_1, check_2, check_3) |>
     View()
 }
 ## The number of excluded records:
