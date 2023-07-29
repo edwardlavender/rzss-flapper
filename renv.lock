@@ -586,6 +586,23 @@
       "Repository": "CRAN",
       "Hash": "d691c61bff84bd63c383874d2d0c3307"
     },
+    "cowplot": {
+      "Package": "cowplot",
+      "Version": "1.1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R",
+        "ggplot2",
+        "grDevices",
+        "grid",
+        "gtable",
+        "methods",
+        "rlang",
+        "scales"
+      ],
+      "Hash": "b418e8423699d11c7f2087c2bfd07da2"
+    },
     "cpp11": {
       "Package": "cpp11",
       "Version": "0.4.4",
@@ -994,6 +1011,19 @@
       ],
       "Hash": "9122b3958e749badb5c939f498038b57"
     },
+    "ggeffects": {
+      "Package": "ggeffects",
+      "Version": "1.2.3",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "graphics",
+        "insight",
+        "stats"
+      ],
+      "Hash": "dace9bfe71091f1d95aa6c22ff8a5b96"
+    },
     "ggplot2": {
       "Package": "ggplot2",
       "Version": "3.4.2",
@@ -1268,6 +1298,19 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "6154ec2223172bce8162d4153cda21f7"
+    },
+    "insight": {
+      "Package": "insight",
+      "Version": "0.19.3",
+      "Source": "Repository",
+      "Repository": "RSPM",
+      "Requirements": [
+        "R",
+        "methods",
+        "stats",
+        "utils"
+      ],
+      "Hash": "e605299a4e3d10404ac7989b05c4a917"
     },
     "interp": {
       "Package": "interp",
@@ -1919,10 +1962,10 @@
       "Source": "GitHub",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteRepo": "prettyGraphics",
       "RemoteUsername": "edwardlavender",
-      "RemoteRef": "HEAD",
-      "RemoteSha": "abf95d2abe8d3c87077db61e127777dc1b88df2a",
+      "RemoteRepo": "prettyGraphics",
+      "RemoteRef": "master",
+      "RemoteSha": "adbfb505b862c47ea3c2356b92ae294a2801240a",
       "Requirements": [
         "R",
         "TeachingDemos",
@@ -1943,7 +1986,7 @@
         "sp",
         "stringr"
       ],
-      "Hash": "ecc1a73bb7f6309d3975086943dec989"
+      "Hash": "1dd6a728665c735efea23fc27d243eb4"
     },
     "prettyunits": {
       "Package": "prettyunits",
