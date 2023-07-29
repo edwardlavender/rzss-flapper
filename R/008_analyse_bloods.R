@@ -25,12 +25,14 @@ library(prettyGraphics)
 
 #### Load data
 source(here_r("001_define_global_param.R"))
+source(here_r("002_define_helpers.R"))
 physio   <- readRDS("./data/skate/physio.rds")
 captures <- readRDS("./data/skate/capture_events.rds")
 
 #### Define local parameters
 # Define whether or not to save figures
-save <- FALSE
+save <- TRUE
+set.seed(1)
 
 
 #########################
@@ -47,8 +49,8 @@ physio$event_id <- captures$event_id[match(physio$key, captures$key)]
 physio$time_surface <- captures$time_surface[match(physio$event_id, captures$event_id)]
 physio$time_deck <- captures$time_deck[match(physio$event_id, captures$event_id)]
 physio$time_from_surface_to_deck <- as.integer(difftime(physio$time_deck,
-  physio$time_surface,
-  units = "mins"
+                                                        physio$time_surface,
+                                                        units = "mins"
 ))
 utils.add::basic_stats(physio$time_from_surface_to_deck)
 
@@ -57,6 +59,10 @@ utils.add::basic_stats(physio$time_from_surface_to_deck)
 # Choose whether or not to include individuals with uncertain parameters
 # ... for the responses (e.g., associated with <) or explanatory variables (e.g., gaffing)
 physio <- physio[physio$healthy == 1, ]
+# Distinguish tagged/non tagged individuals for BS2 models
+physio$surgery <- plyr::mapvalues(physio$surgery, from = c("0", "1"), to = c("N", "Y"))
+physio$vemco[physio$surgery == "N"]
+physio$vemco[physio$surgery == "Y"]
 
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
@@ -71,7 +77,7 @@ covars <- c(
   "time_from_surface_to_bs1", "time_from_capture_to_bs1",
   "time_from_surface_to_bs2", "time_from_capture_to_bs2",
   "time_from_bs1_to_bs2",
-  "temp_water", "gaff"
+  "temp_water", "gaff", "surgery"
 )
 physior <- physio[, colnames(physio) %in% c(covars, resp)]
 physior$resp <- physio[, resp]
@@ -84,8 +90,8 @@ physior$resp <- physio[, resp]
 #### Distribution of response
 utils.add::basic_stats(physior[, resp], na.rm = TRUE)
 
-#### Variable correlations
-psych::pairs.panels(physior)
+#### Correlations
+# Implemented below. 
 
 
 #########################
@@ -98,16 +104,20 @@ if (sample == 1) {
     sex +
     size_len +
     temp_water *
-      time_from_capture_to_surface + time_from_surface_to_bs1 +
+    time_from_capture_to_surface + time_from_surface_to_bs1 +
     gaff
 } else if (sample == 2) {
   form_1 <- resp ~
     sex +
     size_len +
     temp_water *
-      time_from_capture_to_surface + time_from_surface_to_bs2 +
-    gaff
+    time_from_capture_to_surface + time_from_surface_to_bs2 +
+    gaff + surgery
 }
+
+#### Correlations
+str(physior[, all.vars(form_1)])
+pretty_pairs(physior[, all.vars(form_1)])
 
 #### Model fitting
 mod <- glm(form_1, family = gaussian(link = "log"), data = physior)
@@ -135,8 +145,12 @@ coef_names <- c(
   "Time (hook → surface)",
   "Time (surface → sample)",
   "Gaff (Y)",
+  "Surgery (Y)",
   "Temperature: Time (hook → surface)"
 )
+if (sample == "1") {
+  coef_names <- coef_names[-which(coef_names == "Surgery (Y)")]
+}
 coef_tbl <-
   utils.add::tidy_coef(
     coef = coef(summary(mod)),
@@ -150,15 +164,23 @@ tidy_write(coef_tbl, paste0("./fig/", resp, "_coef.txt"))
 #########################
 #### Model predictions
 
+#### Quick plot
+# jit <- c(0.3, 0)
+jit <- c(0, 0)
+cowplot::plot_grid(plotlist = 
+                     plot(ggeffects::ggpredict(mod), 
+                          add.data = TRUE, jitter = jit, dot.size = 0.9, dot.alpha = 2, ci = TRUE)
+)
+
 #### Visualise model predictions for each variable
 ## Set up figure to save
-save <- FALSE
 if (save) {
+  height <- 5.5; width <- 12
   png(paste0("./fig/", resp, "_preds.png"),
-    height = 5.5, width = 9, units = "in", res = 600
-  )
+      height = height, width = width, units = "in", res = 600)
 }
-pp <- par(mfrow = c(2, 3), oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
+mf <- c(2, 4)
+pp <- par(mfrow = mf, oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
 
 ## Define graphical param
 # Define data used for model fitting
@@ -175,35 +197,49 @@ xlabs <- c(
   "Gaff"
 )
 if (sample == 2) {
-  xlabs[4] <- expression("Time (surface" %->% "BS2) [mins]")
+  xlabs[5] <- expression("Time (surface" %->% "BS2) [mins]")
+  xlabs[7] <- "Surgery"
 }
 # Define title param
 xlab_line <- 2.25
 main_adj <- 0
 main_font <- 2
 # Define point colours, shapes and sizes
-physio_in_mod$pt_pch <- 21
-physio_in_mod$pt_cex <- 0.75
+pt_cex_adj <- 0.5
 pt_param <- list(
-  col = scales::alpha("black", 0.75),
-  cex = physio_in_mod$pt_cex,
-  pch = physio_in_mod$pt_pch,
+  pch = 21,
+  col = scales::alpha("green4", 0.75),
+  bg = scales::alpha("green4", 0.75),
+  cex = 1,
   lwd = 0.75
 )
+jt <- 0.2
+jt_param <-
+  list(sex = c(jt, 0), gaff = c(jt, 0), surgery = c(jt, 0))
+jt_param <- jt_param[names(jt_param) %in% all.vars(form_1)]
 # Adjust error bar parameters
-ebars_param$lwd <- 1.5
-ebars_param$add_fit$lwd <- 1.5
+eenv_param <- 
+  list(add_ci = list(col = scales::alpha("lightgrey", 0.8), border = FALSE),
+       add_fit = list(col = "black", lwd = 1.25))
+ebars_param$lwd <- 2.5
+ebars_param$add_fit$pch <- "+"
+ebars_param$add_fit$lwd <- 1.25
+ebars_param$col <- scales::alpha("grey50", 0.95)
 
 ## Plot predictions for sex
 pretty_predictions_1d(
   model = mod,
   x_var = c("sex", "size_len"),
+  add_order = list(sex = c("points", "predictions"), 
+                   size_len = c("predictions", "points")),
   ylim = ylim,
   add_xlab = list(text = xlabs[1:2], line = xlab_line),
   add_ylab = NULL,
   add_main = list(text = c("A", "B"), adj = main_adj, font = main_font),
   add_error_bars = ebars_param,
+  add_error_envelope = eenv_param,
   add_points = pt_param,
+  add_points_jitter = jt_param,
   one_page = FALSE
 )
 
@@ -211,8 +247,8 @@ pretty_predictions_1d(
 # Define prediction data
 p_n <- 100
 p_x <- seq(min(physio_in_mod$temp_water),
-  max(physio_in_mod$temp_water),
-  length.out = p_n
+           max(physio_in_mod$temp_water),
+           length.out = p_n
 )
 p_d <- data.frame(temp_water = p_x)
 p_d$time_from_capture_to_surface <- min(physio_in_mod$time_from_capture_to_surface)
@@ -222,6 +258,7 @@ if (sample == "1") {
   p_d$time_from_surface_to_bs1 <- mean(physio_in_mod$time_from_surface_to_bs1) # added (not in rates models)
 } else {
   p_d$time_from_surface_to_bs2 <- mean(physio_in_mod$time_from_surface_to_bs2) # added (not in rates models)
+  p_d$surgery <- factor("Y", levels = c("N", "Y"))
 }
 p_d$gaff <- factor("N", levels = c("N", "F"))
 p_d$time_index <- 1
@@ -234,8 +271,9 @@ pretty_predictions_1d(
   add_points = NULL,
   add_error_envelope =
     list(
-      add_fit = list(col = "royalblue"),
-      add_ci = list(col = scales::alpha("skyblue", 0.2), border = FALSE)
+      add_fit = rlist::list.merge(eenv_param$add_fit, list(col = "royalblue")),
+      add_ci = rlist::list.merge(eenv_param$add_ci, list(col = scales::alpha("skyblue", 0.2))
+      )
     ),
   add_xlab = list(text = xlabs[3], line = xlab_line),
   add_ylab = NULL,
@@ -245,39 +283,48 @@ pretty_predictions_1d(
 p_d$time_from_capture_to_surface <- max(physio_in_mod$time_from_capture_to_surface)
 p_ci <- list_CIs(predict(mod, p_d, se.fit = TRUE, type = "response"))
 add_error_envelope(p_d$temp_water,
-  p_ci,
-  add_fit = list(col = "darkred"),
-  add_ci = list(col = scales::alpha("red", 0.2), border = FALSE)
+                   p_ci,
+                   add_fit = rlist::list.merge(eenv_param$add_fit, list(col = "darkred")),
+                   add_ci = rlist::list.merge(eenv_param$add_ci, 
+                                              list(col = scales::alpha("red", 0.2))
+                   )
 )
 add_pt <- pt_param
 add_pt$x <- physio_in_mod$temp_water
 add_pt$y <- physio_in_mod$resp
-add_pt$cex <- physio_in_mod$time_from_capture_to_surface / 20
-# add_pt$col <- physio_in_mod$pt_col_ft
+add_pt$cex <- physio_in_mod$time_from_capture_to_surface / max(physio_in_mod$time_from_capture_to_surface) + pt_cex_adj
+pt_cols_ft    <- pretty_cols_brewer(range(physio_in_mod$time_from_capture_to_surface), 
+                                    scheme = "RdBu", 
+                                    select = 1:11, # c(1:4, 7:11), 
+                                    rev = TRUE)
+add_pt$col <- pt_cols_ft$col[findInterval(physio_in_mod$time_from_capture_to_surface, pt_cols_ft$breaks)]
+add_pt$bg <- add_pt$col
 px <- par(xpd = NA)
 do.call(points, add_pt)
 par(px)
-legend_pos <- "topleft"
+legend_pos <- "topright"
+# legend_pos <- "topleft"
+# if (resp %in% c("pH_1", "HCO3_1", "pH_2")) legend_pos <- "bottomleft"
 legend_adj <- 0.1
-if (resp %in% c("pH_1", "HCO3_1", "pH_2")) legend_pos <- "bottomleft"
 legend(legend_pos,
-  lty = c(1, 1),
-  col = c("royalblue", "darkred"),
-  lwd = c(1.5, 1.5),
-  legend = c(
-    expression(T[L]),
-    expression(T[H])
-  ),
-  adj = legend_adj,
-  bty = "n"
+       lty = c(1, 1),
+       col = c("royalblue", "darkred"),
+       lwd = c(1.5, 1.5),
+       legend = c(
+         expression(E(T ~ "|" ~ FT[L])),
+         expression(E(T ~ "|" ~ FT[H]))
+       ),
+       adj = legend_adj,
+       bg = scales::alpha("white", 0.5), , box.lwd = 0.5, box.lty = 3,
+       y.intersp = 1.2
 )
 
 ## Plot predictions for fight time (by temperature)
 # Define prediction data
 p_n <- 100
 p_x <- seq(min(physio_in_mod$time_from_capture_to_surface),
-  max(physio_in_mod$time_from_capture_to_surface),
-  length.out = p_n
+           max(physio_in_mod$time_from_capture_to_surface),
+           length.out = p_n
 )
 p_d <- data.frame(time_from_capture_to_surface = p_x)
 p_d$temp_water <- min(physio_in_mod$temp_water)
@@ -287,6 +334,7 @@ if (sample == "1") {
   p_d$time_from_surface_to_bs1 <- mean(physio_in_mod$time_from_surface_to_bs1) # added
 } else {
   p_d$time_from_surface_to_bs2 <- mean(physio_in_mod$time_from_surface_to_bs2) # added
+  p_d$surgery <- factor("Y", levels = c("N", "Y"))
 }
 p_d$gaff <- factor("N", levels = c("N", "F"))
 p_d$time_index <- 1
@@ -299,8 +347,9 @@ pretty_predictions_1d(
   add_points = NULL,
   add_error_envelope =
     list(
-      add_fit = list(col = "royalblue"),
-      add_ci = list(col = scales::alpha("skyblue", 0.2), border = FALSE)
+      add_fit = rlist::list.merge(eenv_param$add_fit, list(col = "royalblue")),
+      add_ci = rlist::list.merge(eenv_param$add_ci, list(col = scales::alpha("skyblue", 0.2))
+      )
     ),
   add_xlab = list(text = xlabs[4], line = xlab_line),
   add_ylab = NULL,
@@ -310,47 +359,98 @@ pretty_predictions_1d(
 p_d$temp_water <- max(physio_in_mod$temp_water)
 p_ci <- list_CIs(predict(mod, p_d, se.fit = TRUE, type = "response"))
 add_error_envelope(p_d$time_from_capture_to_surface,
-  p_ci,
-  add_fit = list(col = "darkred"),
-  add_ci = list(col = scales::alpha("red", 0.2), border = FALSE)
+                   p_ci,
+                   add_fit = rlist::list.merge(eenv_param$add_fit, list(col = "darkred")),
+                   add_ci = rlist::list.merge(eenv_param$add_ci, 
+                                              list(col = scales::alpha("red", 0.2))
+                   )
 )
 add_pt <- pt_param
 add_pt$x <- physio_in_mod$time_from_capture_to_surface
 add_pt$y <- physio_in_mod$resp
-add_pt$cex <- physio_in_mod$temp_water / 10
+add_pt$cex <- physio_in_mod$temp_water / max(physio_in_mod$temp_water) + pt_cex_adj
+pt_cols_temp    <- pretty_cols_brewer(range(physio_in_mod$temp_water), 
+                                      scheme = "RdBu", 
+                                      select = 1:11, # c(1:4, 7:11), 
+                                      rev = TRUE)
+add_pt$col <- pt_cols_temp$col[findInterval(physio_in_mod$temp, pt_cols_temp$breaks)]
+add_pt$bg  <- add_pt$col
 do.call(points, add_pt)
 legend_adj <- 0.2
-if (resp %in% c("PCO2_2")) legend_pos <- "topright"
+# if (resp %in% c("PCO2_2")) legend_pos <- "topright"
 legend(legend_pos,
-  lty = c(1, 1),
-  col = c("royalblue", "darkred"),
-  legend = c(expression(FT[L]), expression(FT[H])),
-  adj = legend_adj,
-  bty = "n"
+       lty = c(1, 1),
+       col = c("royalblue", "darkred"),
+       legend = c(expression(E(FT ~ "|" ~ T[L])), 
+                  expression(E(FT ~ "|" ~ T[H]))),
+       adj = legend_adj,
+       bg = scales::alpha("white", 0.5), box.lwd = 0.5, box.lty = 3,
+       y.intersp = 1.2
 )
 
-## Plot predictions for handling time and gaff
+## Plot predictions for handling time, gaff and surgery
+x_var_time <- colnames(physio_in_mod)[
+  stringr::str_detect(colnames(physio_in_mod), "time_from_capture")]
+add_order <- 
+  setNames(list(c("predictions", "points"), 
+                c("points", "predictions"), 
+                c("points", "predictions")), 
+           c(x_var_time, "gaff", "surgery"))
+x_var <- setNames(c(x_var_time, "gaff", "surgery"), 
+                  c("E", "F", "G"))
+x_var <- x_var[x_var %in% all.vars(form_1)]
 pretty_predictions_1d(
   model = mod,
-  x_var = c(
-    colnames(physio_in_mod)[
-      stringr::str_detect(colnames(physio_in_mod), "time_from_capture")
-    ],
-    "gaff"
-  ),
+  x_var = x_var,
+  add_order = add_order,
   ylim = ylim,
   add_error_bars = ebars_param,
+  add_error_envelope = eenv_param,
   add_points = pt_param,
-  add_xlab = list(text = xlabs[5:6], line = xlab_line),
+  add_points_jitter = jt_param,
+  add_xlab = list(text = xlabs[5:7], line = xlab_line),
   add_ylab = NULL,
-  add_main = list(text = c("E", "F"), adj = main_adj, font = main_font),
+  add_main = list(text = names(x_var), adj = main_adj, font = main_font),
   one_page = FALSE
 )
-par(pp)
+
+## Add legends 
+# Fight time colour scale
+x <- zoo::rollmean(pt_cols_ft$breaks, 2)
+plot(0, type = "n", 
+     xlim = c(0, 10), ylim = c(0, 10), 
+     axes = FALSE, xlab = "", ylab = "")
+TeachingDemos::subplot(
+  add_colour_bar(data.frame(x = x, col = pt_cols_ft$col), 
+                 pretty_axis_args = pretty_axis(side = 4, 
+                                                lim = list(range(x)),
+                                                control_axis = list(pos = 1, las = TRUE),
+                                                add = FALSE)
+  ), 
+  x = c(1, 2), 
+  y = c(-0.5, 10)
+)
+mtext(side = 4,  expression(E(FT ~ "|" ~ T) ~ "[mins]"), line = -10)
+# Temperature colour scale 
+x <- zoo::rollmean(pt_cols_temp$breaks, 2)
+TeachingDemos::subplot(
+  add_colour_bar(data.frame(x = x, col = pt_cols_temp$col), 
+                 pretty_axis_args = pretty_axis(side = 4, 
+                                                lim = list(range(x)),
+                                                control_axis = list(pos = 1, las = TRUE),
+                                                add = FALSE)
+  ), 
+  x = c(6, 7), 
+  y = c(-0.5, 10)
+)
+mtext(side = 4,  expression(E(T ~ "|" ~ FT)~ "[" * degree * "C]"), line = -2)
 
 ## Global titles
-mtext(side = 2, ylabs[[substr(resp, 1, nchar(resp) - 2)]], line = 2.5)
+mtext(side = 2, ylabs[[substr(resp, 1, nchar(resp) - 2)]], line = 2.5, outer = TRUE)
+par(pp)
 if (save) dev.off()
+# open(paste0("./fig/", resp, "_preds.png"))
+# stop("Done!")
 
 
 #########################
@@ -360,7 +460,7 @@ if (save) dev.off()
 #### Model residuals
 if (save) {
   png(paste0("./fig/", resp, "_diagnostics.png"),
-    height = 5.5, width = 9, units = "in", res = 600
+      height = 5.5, width = 9, units = "in", res = 600
   )
 }
 pp <- par(mfrow = c(1, 2))
@@ -373,23 +473,23 @@ if (save) dev.off()
 physio_in_mod$x <- factor(1:nrow(physio_in_mod))
 ps <- list_CIs(predict(mod, type = "response", se.fit = TRUE))
 pretty_plot(physio_in_mod$x, physio_in_mod$resp,
-  pretty_axis_args =
-    list(
-      side = 1:2,
-      x = list(
-        x = range_factor(physio_in_mod$x),
-        y = range(
-          c(
-            physio_in_mod$resp,
-            ps$lowerCI,
-            ps$upperCI
-          ),
-          na.rm = TRUE
-        )
-      )
-    ),
-  type = "n",
-  main = resp
+            pretty_axis_args =
+              list(
+                side = 1:2,
+                x = list(
+                  x = range_factor(physio_in_mod$x),
+                  y = range(
+                    c(
+                      physio_in_mod$resp,
+                      ps$lowerCI,
+                      ps$upperCI
+                    ),
+                    na.rm = TRUE
+                  )
+                )
+              ),
+            type = "n",
+            main = resp
 )
 add_error_bars(physio_in_mod$x, fit = ps$fit, lwr = ps$lowerCI, upr = ps$upperCI)
 points(physio_in_mod$x, physio_in_mod$resp, col = "red")
@@ -485,8 +585,8 @@ coefs <-
   }) |> dplyr::bind_rows()
 # Write tidy table of coefficients to file
 tidy_write(coefs,
-  paste0("./fig/blood_coefs_", sample, ".txt"),
-  na = ""
+           paste0("./fig/blood_coefs_", sample, ".txt"),
+           na = ""
 )
 
 #### Summary statistics for deviance explained
