@@ -11,6 +11,15 @@
 
 ###########################
 ###########################
+#### Utils
+
+#' @title Open a file
+.open <- function(file) system(sprintf("open %s", shQuote(file)))
+open <- function(file) invisible(sapply(file, .open))
+
+
+###########################
+###########################
 #### Data processing 
 
 #' @title Identify strings that contain symbols
@@ -31,6 +40,22 @@ get_time <- function(rates_raw, stage = "Time on hook") {
   anchor[, 2] <- anchor[, 2] + 1
   time <- rates_raw[anchor]
   chron::times(as.numeric(time))
+}
+
+
+###########################
+###########################
+#### Plotting
+
+#' @title Pretty pairs plots
+pretty_pairs <- function(data) {
+  psych::pairs.panels(data, 
+                      method = "spearman", lwd = 2,
+                      ellipse = FALSE, 
+                      hist.col = scales::alpha("lightgrey", 0.75), rug = FALSE,
+                      cex.cor = 2, cex.axis = 1.6,
+                      scale = TRUE, gap = 0.25,
+                      las = TRUE, cex.labels = 0.8, font.labels = 2)
 }
 
 
