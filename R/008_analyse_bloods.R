@@ -128,7 +128,6 @@ if (sample == 1) {
                   physio$time_from_surface_to_bs2, 
                 na.rm = TRUE))
 }
-saveRDS(form_1, here_data("helper", paste0("formula_", sample, ".rds")))
 
 #### Correlations
 str(physior[, all.vars(form_1)])
@@ -136,6 +135,7 @@ pretty_pairs(physior[, all.vars(form_1)])
 
 #### Model fitting
 mod <- glm(form_1, family = gaussian(link = lf), data = physior)
+saveRDS(mod, here_data("models", sample, paste0(resp, ".rds")))
 
 
 #########################
@@ -516,8 +516,8 @@ mtext(side = 4,  expression(E(T ~ "|" ~ FT)~ "[" * degree * "C]"), line = -2)
 mtext(side = 2, ylabs[[substr(resp, 1, nchar(resp) - 2)]], line = 2.5, outer = TRUE)
 par(pp)
 if (save) dev.off()
-open(paste0("./fig/", resp, "_preds.png"))
-stop("Done!")
+# open(paste0("./fig/", resp, "_preds.png"))
+# stop("Done!")
 
 
 #########################
@@ -630,6 +630,7 @@ coefs <-
       print(resp)
       physio$resp <- physio[, resp]
       mod <- glm(form_1, family = gaussian(link = lf), data = physio)
+      # mod <- readRDS(here_data("models", sample, paste0(resp, ".rds")))
       n_mod <- nrow(model.frame(mod))
       # Extract tidy summary table
       coef_tbl <-
