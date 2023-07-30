@@ -98,12 +98,12 @@ resps_exclude <- c("K_2", "Mg_2", "PCO2_3", "PO2_3", "K_3", "Mg_3")
 
 #### Effect size limits
 ylims_ratios <- list(
-  pH = c(0.90, 1.05),
-  PCO2 = c(0, 4),
-  PO2 = c(0, 4),
-  HCO3 = c(0, 2),
-  lac = c(0, 10),
-  glu = c(0, 4),
+  pH = c(0.90, 1.1),
+  PCO2 = c(0, 8),
+  PO2 = c(0, 8),
+  HCO3 = c(0, 2.5),
+  lac = c(0, 11),
+  glu = c(0, 8),
   K = c(0, 6),
   Mg = c(0.5, 2)
 )

@@ -43,7 +43,7 @@ set.seed(1)
 #### Set up simulations
 
 #### Define blood sample ("1", "2", "3") and response variables
-sample <- "3"
+sample <- "2"
 if (sample == "1") {
   resps_for_bs <- paste0(resps, "_1")
 } else if (sample == "2") {
