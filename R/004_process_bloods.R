@@ -187,9 +187,20 @@ physio$HCO3_1[physio$pit == 7093028]
 # ... This has already been set to NA in the raw data.
 physio$PCO2_2[physio$pit == "10991061"]
 
+#### Define difference between blood parameters
+# ... The 'difference' variable is labelled using sample = '3'
+# ... for consistency with BS1 and BS2, so we can use the same code
+for (r in resps) {
+  r1 <- paste0(r, "_1")
+  r2 <- paste0(r, "_2")
+  r3 <- paste0(r, "_3")
+  physio[, r3] <- physio[, r2] - physio[, r1]
+}
+
 #### Check the number of observations for each response
 sapply(resps, function(resp) length(which(!is.na(physio[, paste0(resp, "_1")]))))
 sapply(resps, function(resp) length(which(!is.na(physio[, paste0(resp, "_2")]))))
+sapply(resps, function(resp) length(which(!is.na(physio[, paste0(resp, "_3")]))))
 
 
 #########################

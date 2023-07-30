@@ -62,15 +62,6 @@ physio <- physio[physio$healthy == 1, ]
 # Distinguish tagged/non tagged individuals for BS2 models
 physio$vemco[physio$surgery == "N"]
 physio$vemco[physio$surgery == "Y"]
-# Define difference between blood parameters
-# ... The 'difference' variable is labelled using sample = '3'
-# ... for consistency with BS1 and BS2, so we can use the same code
-for (r in resps) {
-  r1 <- paste0(r, "_1")
-  r2 <- paste0(r, "_2")
-  r3 <- paste0(r, "_3")
-  physio[, r3] <- physio[, r2] - physio[, r1]
-}
 
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
