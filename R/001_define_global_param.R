@@ -34,6 +34,13 @@ titles <- list(
   K = expression(bold("G") ~ "(" * K^"+" * ")"),
   Mg = expression(bold("H") ~ "(" * Mg^"2+" * ")")
 )
+# Titles for simulation-based analysis of changes 
+titles_3 <- list(
+  pH = expression(bold("A") ~ "(" * "pH" * ")"),
+  HCO3 = expression(bold("B") ~ "(" * HCO[3]^" -" * ")"),
+  lac = expression(bold("C") ~ "(" * "Lac" * ")"),
+  glu = expression(bold("D") ~ "(" * "Glu" * ")")
+)
 ## Define pretty axis expressions
 ylabs <- list(
   pH = "pH",
@@ -86,6 +93,8 @@ ylims <- list(
   K = c(0, 12),
   Mg = c(0.7, 1.7)
 )
+## Excludes
+resps_exclude <- c("K_2", "Mg_2", "PCO2_3", "PO2_3", "K_3", "Mg_3")
 
 #### Effect size limits
 ylims_ratios <- list(
