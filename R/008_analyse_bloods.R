@@ -62,11 +62,20 @@ physio <- physio[physio$healthy == 1, ]
 # Distinguish tagged/non tagged individuals for BS2 models
 physio$vemco[physio$surgery == "N"]
 physio$vemco[physio$surgery == "Y"]
+# Define difference between blood parameters
+# ... The 'difference' variable is labelled using sample = '3'
+# ... for consistency with BS1 and BS2, so we can use the same code
+for (r in resps) {
+  r1 <- paste0(r, "_1")
+  r2 <- paste0(r, "_2")
+  r3 <- paste0(r, "_3")
+  physio[, r3] <- physio[, r2] - physio[, r1]
+}
 
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
 yvar <- "pH"
-sample <- "2"
+sample <- "3"
 resp <- paste0(yvar, "_", sample)
 
 #### Focus on specific columns
@@ -99,6 +108,7 @@ utils.add::basic_stats(physior[, resp], na.rm = TRUE)
 
 #### Model formulae
 if (sample == 1) {
+  lf <- "log"
   form_1 <- resp ~
     sex +
     size_len +
@@ -106,12 +116,26 @@ if (sample == 1) {
     time_from_capture_to_surface + time_from_surface_to_bs1 +
     gaff
 } else if (sample == 2) {
+  lf <- "log"
   form_1 <- resp ~
     sex +
     size_len +
     temp_water *
     time_from_capture_to_surface + time_from_surface_to_bs2 +
     gaff + surgery
+} else if (sample == 3) {
+  # Include time between blood samples
+  lf <- "identity"
+  form_1 <- resp ~
+    sex +
+    size_len +
+    temp_water *
+    time_from_capture_to_surface + time_from_surface_to_bs1 + time_from_bs1_to_bs2 + 
+    gaff + surgery
+  # Confirm times 'add up' as expected
+  stopifnot(all(physio$time_from_surface_to_bs1 + physio$time_from_bs1_to_bs2 == 
+                  physio$time_from_surface_to_bs2, 
+                na.rm = TRUE))
 }
 
 #### Correlations
@@ -119,7 +143,7 @@ str(physior[, all.vars(form_1)])
 pretty_pairs(physior[, all.vars(form_1)])
 
 #### Model fitting
-mod <- glm(form_1, family = gaussian(link = "log"), data = physior)
+mod <- glm(form_1, family = gaussian(link = lf), data = physior)
 
 
 #########################
@@ -134,21 +158,45 @@ nrow(model.frame(mod))
 summary(mod)
 # deviance explained
 # utils.add::dev_expl(mod)
+car::vif(mod)
 
 #### Model summary (tidy)
-coef_names <- c(
-  "Intercept",
-  "Sex (M)",
-  "Size",
-  "Temperature",
-  "Time (hook → surface)",
-  "Time (surface → sample)",
-  "Gaff (Y)",
-  "Surgery (Y)",
-  "Temperature: Time (hook → surface)"
-)
-if (sample == "1") {
-  coef_names <- coef_names[-which(coef_names == "Surgery (Y)")]
+if (sample == 1) {
+  coef_names <- c(
+    "Intercept",
+    "Sex (M)",
+    "Size",
+    "Temperature",
+    "Time (hook → surface)",
+    "Time (surface → BS1)",
+    "Gaff (Y)",
+    "Temperature: Time (hook → surface)"
+  )
+} else if (sample == 2) {
+  coef_names <- c(
+    "Intercept",
+    "Sex (M)",
+    "Size",
+    "Temperature",
+    "Time (hook → surface)",
+    "Time (surface → BS2)",
+    "Gaff (Y)",
+    "Surgery (Y)",
+    "Temperature: Time (hook → surface)"
+  )
+} else if (sample == 3) {
+  coef_names <- c(
+    "Intercept",
+    "Sex (M)",
+    "Size",
+    "Temperature",
+    "Time (hook → surface)",
+    "Time (surface → BS1)",
+    "Time (BS1 → BS2)",
+    "Gaff (Y)",
+    "Surgery (Y)",
+    "Temperature: Time (hook → surface)"
+  )
 }
 coef_tbl <-
   utils.add::tidy_coef(
@@ -171,33 +219,77 @@ cowplot::plot_grid(plotlist =
                           add.data = TRUE, jitter = jit, dot.size = 0.9, dot.alpha = 2, ci = TRUE)
 )
 
+#### Define prediction constants
+# This fixes constants across all plots
+constants <- 
+  data.frame(time_from_capture_to_surface = mean(physio$time_from_capture_to_surface, na.rm = TRUE), 
+             temp_water                   = mean(physio$temp_water, na.rm = TRUE),
+             sex                          = factor("F", levels = c("F", "M")), 
+             size_len                     = mean(physio$size_len, na.rm = TRUE), 
+             time_from_surface_to_bs1     = mean(physio$time_from_surface_to_bs1, na.rm = TRUE), 
+             time_from_surface_to_bs2     = mean(physio$time_from_surface_to_bs2, na.rm = TRUE), 
+             time_from_bs1_to_bs2         = mean(physio$time_from_bs1_to_bs2, na.rm = TRUE), 
+             surgery                      = factor("Y", levels = c("N", "Y")), 
+             gaff                         = factor("N", levels = c("N", "F")), 
+             time_index                   = 1)
+
 #### Visualise model predictions for each variable
 ## Set up figure to save
-if (save) {
+if (sample %in% c(1, 2)) {
   height <- 5.5; width <- 12
+  mf <- c(2, 4)
+} else {
+  height <- 7.5; width <- 9
+  mf <- c(3, 3)
+}
+if (save) {
   png(paste0("./fig/", resp, "_preds.png"),
       height = height, width = width, units = "in", res = 600)
 }
-mf <- c(2, 4)
+
 pp <- par(mfrow = mf, oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
 
 ## Define graphical param
 # Define data used for model fitting
 physio_in_mod <- model.frame(mod)
 # Get appropriate y limits
-ylim <- ylims[[substr(resp, 1, nchar(resp) - 2)]]
+if (sample %in% c(1, 2)) {
+  ylim <- ylims[[substr(resp, 1, nchar(resp) - 2)]]
+} else {
+  ylim <- NULL
+}
+
 # Define titles
-xlabs <- c(
-  "Sex",
-  "Size [cm]",
-  expression("Temperature [" * degree * "C]"),
-  expression("Time (hook" %->% "surface) [mins]"),
-  expression("Time (surface" %->% "BS1) [mins]"),
-  "Gaff"
-)
-if (sample == 2) {
-  xlabs[5] <- expression("Time (surface" %->% "BS2) [mins]")
-  xlabs[7] <- "Surgery"
+if (sample == 1) {
+  xlabs <- c(
+    "Sex",
+    "Size [cm]",
+    expression("Temperature [" * degree * "C]"),
+    expression("Time (hook" %->% "surface) [mins]"),
+    expression("Time (surface" %->% "BS1) [mins]"),
+    "Gaff"
+  )
+} else if (sample == 2) {
+  xlabs <- c(
+    "Sex",
+    "Size [cm]",
+    expression("Temperature [" * degree * "C]"),
+    expression("Time (hook" %->% "surface) [mins]"),
+    expression("Time (surface" %->% "BS2) [mins]"),
+    "Gaff", 
+    "Surgery"
+  )
+} else if (sample == 3) {
+  xlabs <- c(
+    "Sex",
+    "Size [cm]",
+    expression("Temperature [" * degree * "C]"),
+    expression("Time (hook" %->% "surface) [mins]"),
+    expression("Time (surface" %->% "BS1) [mins]"),
+    expression("Time (BS1" %->% "BS2) [mins]"),
+    "Gaff", 
+    "Surgery"
+  )
 }
 # Define title param
 xlab_line <- 2.25
@@ -229,6 +321,7 @@ ebars_param$col <- scales::alpha("grey50", 0.95)
 pretty_predictions_1d(
   model = mod,
   x_var = c("sex", "size_len"),
+  constants = constants,
   add_order = list(sex = c("points", "predictions"), 
                    size_len = c("predictions", "points")),
   ylim = ylim,
@@ -247,24 +340,14 @@ pretty_predictions_1d(
 p_n <- 100
 p_x <- seq(min(physio_in_mod$temp_water),
            max(physio_in_mod$temp_water),
-           length.out = p_n
-)
-p_d <- data.frame(temp_water = p_x)
-p_d$time_from_capture_to_surface <- min(physio_in_mod$time_from_capture_to_surface)
-p_d$sex <- factor("F", levels = c("F", "M"))
-p_d$size_len <- mean(physio_in_mod$size_len)
-if (sample == "1") {
-  p_d$time_from_surface_to_bs1 <- mean(physio_in_mod$time_from_surface_to_bs1) # added (not in rates models)
-} else {
-  p_d$time_from_surface_to_bs2 <- mean(physio_in_mod$time_from_surface_to_bs2) # added (not in rates models)
-  p_d$surgery <- factor("Y", levels = c("N", "Y"))
-}
-p_d$gaff <- factor("N", levels = c("N", "F"))
-p_d$time_index <- 1
+           length.out = p_n)
+p_d <- lapply(seq_len(length(p_x)), \(i) constants) |> dplyr::bind_rows()
+p_d$time_from_capture_to_surface <- min(physio$time_from_capture_to_surface)
+p_d$temp_water <- p_x
 # Plot predictions for effects of temperature when fight time is low
 pretty_predictions_1d(
   model = mod,
-  newdata = p_d[p_d$time_from_capture_to_surface == min(physio_in_mod$time_from_capture_to_surface), ],
+  newdata = p_d,
   x_var = "temp_water",
   ylim = ylim,
   add_points = NULL,
@@ -279,7 +362,7 @@ pretty_predictions_1d(
   add_main = list(text = "C", adj = main_adj, font = main_font)
 )
 # Add predictions for effects of temperature when fight time is high
-p_d$time_from_capture_to_surface <- max(physio_in_mod$time_from_capture_to_surface)
+p_d$time_from_capture_to_surface <- max(physio$time_from_capture_to_surface, na.rm = TRUE)
 p_ci <- list_CIs(predict(mod, p_d, se.fit = TRUE, type = "response"))
 add_error_envelope(p_d$temp_water,
                    p_ci,
@@ -291,8 +374,8 @@ add_error_envelope(p_d$temp_water,
 add_pt <- pt_param
 add_pt$x <- physio_in_mod$temp_water
 add_pt$y <- physio_in_mod$resp
-add_pt$cex <- physio_in_mod$time_from_capture_to_surface / max(physio_in_mod$time_from_capture_to_surface) + pt_cex_adj
-pt_cols_ft    <- pretty_cols_brewer(range(physio_in_mod$time_from_capture_to_surface), 
+add_pt$cex <- physio_in_mod$time_from_capture_to_surface / max(physio$time_from_capture_to_surface, na.rm = TRUE) + pt_cex_adj
+pt_cols_ft    <- pretty_cols_brewer(range(physio$time_from_capture_to_surface, na.rm = TRUE), 
                                     scheme = "RdBu", 
                                     select = 1:11, # c(1:4, 7:11), 
                                     rev = TRUE)
@@ -323,24 +406,14 @@ legend(legend_pos,
 p_n <- 100
 p_x <- seq(min(physio_in_mod$time_from_capture_to_surface),
            max(physio_in_mod$time_from_capture_to_surface),
-           length.out = p_n
-)
-p_d <- data.frame(time_from_capture_to_surface = p_x)
-p_d$temp_water <- min(physio_in_mod$temp_water)
-p_d$sex <- factor("F", levels = c("F", "M"))
-p_d$size_len <- mean(physio_in_mod$size_len)
-if (sample == "1") {
-  p_d$time_from_surface_to_bs1 <- mean(physio_in_mod$time_from_surface_to_bs1) # added
-} else {
-  p_d$time_from_surface_to_bs2 <- mean(physio_in_mod$time_from_surface_to_bs2) # added
-  p_d$surgery <- factor("Y", levels = c("N", "Y"))
-}
-p_d$gaff <- factor("N", levels = c("N", "F"))
-p_d$time_index <- 1
+           length.out = p_n)
+p_d <- lapply(seq_len(length(p_x)), \(i) constants) |> dplyr::bind_rows()
+p_d$time_from_capture_to_surface <- p_x
+p_d$temp_water <- min(physio$temp_water, na.rm = TRUE)
 # Plot predictions for effects of fight time in low temperatures
 pretty_predictions_1d(
   model = mod,
-  newdata = p_d[p_d$temp_water == min(physio_in_mod$temp_water), ],
+  newdata = p_d,
   x_var = "time_from_capture_to_surface",
   ylim = ylim,
   add_points = NULL,
@@ -355,7 +428,7 @@ pretty_predictions_1d(
   add_main = list(text = "D", adj = main_adj, font = main_font)
 )
 # Add predictions for effects of fight time in warm temperatures
-p_d$temp_water <- max(physio_in_mod$temp_water)
+p_d$temp_water <- max(physio$temp_water, na.rm = TRUE)
 p_ci <- list_CIs(predict(mod, p_d, se.fit = TRUE, type = "response"))
 add_error_envelope(p_d$time_from_capture_to_surface,
                    p_ci,
@@ -367,8 +440,8 @@ add_error_envelope(p_d$time_from_capture_to_surface,
 add_pt <- pt_param
 add_pt$x <- physio_in_mod$time_from_capture_to_surface
 add_pt$y <- physio_in_mod$resp
-add_pt$cex <- physio_in_mod$temp_water / max(physio_in_mod$temp_water) + pt_cex_adj
-pt_cols_temp    <- pretty_cols_brewer(range(physio_in_mod$temp_water), 
+add_pt$cex <- physio_in_mod$temp_water / max(physio$temp_water, na.rm = TRUE) + pt_cex_adj
+pt_cols_temp    <- pretty_cols_brewer(range(physio$temp_water, na.rm = TRUE), 
                                       scheme = "RdBu", 
                                       select = 1:11, # c(1:4, 7:11), 
                                       rev = TRUE)
@@ -392,15 +465,17 @@ x_var_time <- colnames(physio_in_mod)[
   stringr::str_detect(colnames(physio_in_mod), "time_from_capture")]
 add_order <- 
   setNames(list(c("predictions", "points"), 
+                c("predictions", "points"),
                 c("points", "predictions"), 
                 c("points", "predictions")), 
-           c(x_var_time, "gaff", "surgery"))
-x_var <- setNames(c(x_var_time, "gaff", "surgery"), 
-                  c("E", "F", "G"))
+           c(x_var_time, "time_from_bs1_to_bs2", "gaff", "surgery"))
+x_var <- c(x_var_time, "time_from_bs1_to_bs2", "gaff", "surgery")
 x_var <- x_var[x_var %in% all.vars(form_1)]
+x_var <- setNames(x_var, LETTERS[5:(5 + length(x_var) - 1)])
 pretty_predictions_1d(
   model = mod,
   x_var = x_var,
+  constants = constants,
   add_order = add_order,
   ylim = ylim,
   add_error_bars = ebars_param,
@@ -448,8 +523,8 @@ mtext(side = 4,  expression(E(T ~ "|" ~ FT)~ "[" * degree * "C]"), line = -2)
 mtext(side = 2, ylabs[[substr(resp, 1, nchar(resp) - 2)]], line = 2.5, outer = TRUE)
 par(pp)
 if (save) dev.off()
-# open(paste0("./fig/", resp, "_preds.png"))
-# stop("Done!")
+open(paste0("./fig/", resp, "_preds.png"))
+stop("Done!")
 
 
 #########################
@@ -511,7 +586,7 @@ points(physio_in_mod$x, physio_in_mod$resp, col = "red")
 ## This contains the number of observations, alongside summary
 # ... statistics of each distribution
 summaries <-
-  lapply(c(paste0(resps, "_1"), paste0(resps, "_2")), function(resp) {
+  lapply(c(paste0(resps, "_1"), paste0(resps, "_2"), paste0(resps, "_3")), function(resp) {
     physio$resp <- physio[, resp]
     pos <- which(!is.na(physio$resp))
     n_obs <- length(pos)
@@ -541,6 +616,8 @@ colnames(summaries) <-
   stringr::str_replace_all(colnames(summaries), "_1", " [1]")
 colnames(summaries) <-
   stringr::str_replace_all(colnames(summaries), "_2", " [2]")
+colnames(summaries) <-
+  stringr::str_replace_all(colnames(summaries), "_3", " [D]")
 summaries$Parameter <-
   resps_names$name[match(summaries$Parameter, resps_names$resp)]
 ## Examine the range in the number of observations across parameters for BS1/2
@@ -555,10 +632,11 @@ coefs <-
   lapply(paste0(resps, "_", sample), function(resp) {
     # Fit model and get the number of observations used for model fitting
     # (... excluding K_2 and Mg_2 due to a lack of data)
-    if (!(resp %in% c("K_2", "Mg_2"))) {
+    if (!(resp %in% c("K_2", "Mg_2", 
+                      "PCO2_3", "PO2_3", "K_3", "Mg_3"))) {
       print(resp)
       physio$resp <- physio[, resp]
-      mod <- glm(form_1, family = gaussian(link = "log"), data = physio)
+      mod <- glm(form_1, family = gaussian(link = lf), data = physio)
       n_mod <- nrow(model.frame(mod))
       # Extract tidy summary table
       coef_tbl <-
