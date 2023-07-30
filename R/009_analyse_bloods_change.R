@@ -30,7 +30,8 @@ physio <- readRDS("./data/skate/physio.rds")
 
 #### Define local parameters
 # Define whether or not to save figures
-save <- FALSE
+save <- TRUE
+set.seed(1)
 
 
 #########################
@@ -40,7 +41,7 @@ save <- FALSE
 #### Loop over each response and make plots
 if (save) {
   png("./fig/blood_sample_change.png",
-    height = 6, width = 8, units = "in", res = 800
+    height = 6, width = 10, units = "in", res = 800
   )
 }
 pp <- par(
@@ -50,42 +51,75 @@ pp <- par(
 prompt <- FALSE # TRUE
 obs_by_param <-
   lapply(1:length(resps), function(i) {
+    
     #### Define response
     # i <- 1
     resp <- resps[i]
     ylab <- ylabs[[resp]]
     resp_1 <- paste0(resp, "_1")
     resp_2 <- paste0(resp, "_2")
-    y <- c(physio[, resp_1], physio[, resp_2])
-    y_is_valid <- !is.na(y)
-    y <- y[y_is_valid]
-
-    #### Define 'x' variable
-    x <- rep(c("BS1", "BS2"), each = nrow(physio))
-    x <- x[y_is_valid]
-    x <- factor(x, levels = unique(x))
-    dat <- data.frame(resp = resp, x = x, y = y)
-
+    
+    #### Define data 
+    dat <- 
+      rbind(
+        data.frame(x = "BS1", y = physio[, resp_1]),
+        data.frame(x = "BS2", y = physio[, resp_2]),
+        data.frame(x = "BS2,surgery:N", y = physio[physio$surgery == "N", resp_2]),
+        data.frame(x = "BS2,surgery:Y", y = physio[physio$surgery == "Y", resp_2])
+      )
+    dat <- dat[complete.cases(dat), ]
+    dat$resp <- resp
+    xlabs <- c("BS1", "BS2", 
+               expression("BS2:" ~ S[N]),
+               expression("BS2:" ~ S[Y]))
+    dat$x <- factor(dat$x, 
+                    levels = c("BS1", "BS2", "BS2,surgery:N",  "BS2,surgery:Y"), 
+                    labels = xlabs)
+    # Define boxplot widths (based on the number of data)
+    w <- 
+      dat |> 
+      dplyr::group_by(x) |>
+      dplyr::summarise(n = dplyr::n())
+    
     #### Make boxplot
-    pretty_boxplot(x, y,
-      width = c(
-        length(which(!is.na(physio[, resp_1]))),
-        length(which(!is.na(physio[, resp_2])))
-      ),
+    pretty_boxplot(dat$x, dat$y,
+      width = w$n,
       ylim = ylims[[i]], ylab = "",
-      pretty_axis_args = list(side = 1:2, control_digits = 1)
+      pretty_axis_args = list(side = 1:2, axis = list(list(labels = FALSE), list(NULL)), control_digits = 1)
     )
-    points(c(1, 2),
+    # Add observed data (jittered horizontally)
+    dat$j <- as.integer(dat$x)
+    dat$j <- runif(nrow(dat), dat$j - 0.1, dat$j + 0.1)
+    pt_param <- list(
+      pch = 21,
+      col = scales::alpha("green4", 0.5),
+      bg = scales::alpha("green4", 0.5),
+      cex = 0.5,
+      lwd = 0.75
+    )
+    pt_param$x <- dat$j
+    pt_param$y <- dat$y
+    do.call(points, pt_param)
+    # Add mean values
+    points(1:4,
       dat |>
         dplyr::group_by(x) |>
         dplyr::summarise(z = mean(y)) |>
         dplyr::pull(z),
-      pch = 3
+      pch = 3, lwd = 2
     )
+    # Add a line at BS1
+    lines(c(0.5, 4.5), rep(median(dat$y[dat$x == "BS1"]), 2), col = "red2", lty = 3, lwd = 1.5)
+    # Add axes/labels
+    axis(side = 1, at = 1:4, labels = xlabs, tick = 0)
     mtext(side = 2, ylab, line = 2)
     mtext(side = 3, LETTERS[i], font = 2, adj = 0)
+    
+    #### Continue
     if (prompt) readline("Press [Enter] to continue...")
     return(dat)
+    
+    
   }) |> invisible()
 mtext(side = 1, "Blood sample", line = 1, outer = TRUE)
 par(pp)
