@@ -17,6 +17,15 @@
 .open <- function(file) system(sprintf("open %s", shQuote(file)))
 open <- function(file) invisible(sapply(file, .open))
 
+#' @title Strip a string of whitespace
+str_strip <- function(x, collapse = "_", ext = "") {
+  x <- stringr::str_replace_all(x, " ", collapse) 
+  if (ext != "") {
+    x <- paste0(x, ".", ext)
+  }
+  x
+}
+
 
 ###########################
 ###########################
