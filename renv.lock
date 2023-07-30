@@ -1113,6 +1113,20 @@
       ],
       "Hash": "b2346a3ae9d4d9917e39bf72b6bf3940"
     },
+    "gamm4": {
+      "Package": "gamm4",
+      "Version": "0.2-6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "Matrix",
+        "R",
+        "lme4",
+        "methods",
+        "mgcv"
+      ],
+      "Hash": "07fd04f71ff5fbf2a69c74e4ec128d65"
+    },
     "gap": {
       "Package": "gap",
       "Version": "1.5-1",
@@ -1755,6 +1769,16 @@
       ],
       "Hash": "0ffaea87c070a56d140ce00b0727b278"
     },
+    "matrixStats": {
+      "Package": "matrixStats",
+      "Version": "1.0.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "R"
+      ],
+      "Hash": "9143629fd64335aac6a6250d1c1ed82a"
+    },
     "memoise": {
       "Package": "memoise",
       "Version": "2.0.1",
@@ -1765,6 +1789,28 @@
         "rlang"
       ],
       "Hash": "e2817ccf4a065c5d9d7f2cfbe7c1d78c"
+    },
+    "mgcViz": {
+      "Package": "mgcViz",
+      "Version": "0.1.9",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "GGally",
+        "KernSmooth",
+        "R",
+        "gamm4",
+        "ggplot2",
+        "gridExtra",
+        "matrixStats",
+        "mgcv",
+        "miniUI",
+        "plyr",
+        "qgam",
+        "shiny",
+        "viridis"
+      ],
+      "Hash": "279c6f881c7fde6fdbb35fad6142c707"
     },
     "mgcv": {
       "Package": "mgcv",
@@ -1819,6 +1865,18 @@
         "tools"
       ],
       "Hash": "18e9c28c1d3ca1560ce30658b22ce104"
+    },
+    "miniUI": {
+      "Package": "miniUI",
+      "Version": "0.1.1.1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "htmltools",
+        "shiny",
+        "utils"
+      ],
+      "Hash": "fec5f52652d60615fdb3957b3d74324a"
     },
     "minqa": {
       "Package": "minqa",
