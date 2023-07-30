@@ -137,6 +137,7 @@ physio$pit <- factor(physio$pit)
 physio$vemco[physio$vemco == "N"] <- NA
 physio$vemco <- factor(physio$vemco)
 physio$surgery <- factor(physio$surgery)
+physio$surgery <- plyr::mapvalues(physio$surgery, from = c("0", "1"), to = c("N", "Y"))
 physio$age <- factor(physio$age)
 physio$age_uncertain <- factor(physio$age_uncertain)
 physio$sex <- factor(physio$sex)

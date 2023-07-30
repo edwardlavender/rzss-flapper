@@ -60,7 +60,6 @@ utils.add::basic_stats(physio$time_from_surface_to_deck)
 # ... for the responses (e.g., associated with <) or explanatory variables (e.g., gaffing)
 physio <- physio[physio$healthy == 1, ]
 # Distinguish tagged/non tagged individuals for BS2 models
-physio$surgery <- plyr::mapvalues(physio$surgery, from = c("0", "1"), to = c("N", "Y"))
 physio$vemco[physio$surgery == "N"]
 physio$vemco[physio$surgery == "Y"]
 
