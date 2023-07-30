@@ -290,21 +290,11 @@ main_adj <- 0
 main_font <- 2
 # Define point colours, shapes and sizes
 pt_cex_adj <- 0.5
-pt_param <- list(
-  pch = 21,
-  col = scales::alpha("green4", 0.75),
-  bg = scales::alpha("green4", 0.75),
-  cex = 1,
-  lwd = 0.75
-)
 jt <- 0.2
 jt_param <-
   list(sex = c(jt, 0), gaff = c(jt, 0), surgery = c(jt, 0))
 jt_param <- jt_param[names(jt_param) %in% all.vars(form_1)]
 # Adjust error bar parameters
-eenv_param <- 
-  list(add_ci = list(col = scales::alpha("lightgrey", 0.8), border = FALSE),
-       add_fit = list(col = "black", lwd = 1.25))
 ebars_param$lwd <- 2.5
 ebars_param$add_fit$pch <- "+"
 ebars_param$add_fit$lwd <- 1.25

@@ -108,13 +108,24 @@ ylims_ratios <- list(
   Mg = c(0.5, 2)
 )
 
-#### Define graphical parameters for error bars
+#### Define graphical parameters for error bars and envelopes
 ebars_lwd <- 2
 ebars_param <- list(
   add_fit = list(pch = 3, bg = "black", cex = 2, lwd = ebars_lwd),
   lwd = ebars_lwd
 )
+eenv_param <- 
+  list(add_ci = list(col = scales::alpha("lightgrey", 0.8), border = FALSE),
+       add_fit = list(col = "black", lwd = 1.25))
 
+#### Point parameters
+pt_param <- list(
+  pch = 21,
+  col = scales::alpha("green4", 0.75),
+  bg = scales::alpha("green4", 0.75),
+  cex = 1,
+  lwd = 0.75
+)
 
 
 #### End of code.
