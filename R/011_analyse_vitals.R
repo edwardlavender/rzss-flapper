@@ -29,12 +29,13 @@ library(ggplot2)
 
 #### Load data
 source(here_r("001_define_global_param.R"))
+source(here_r("002_define_helpers.R"))
 captures <- readRDS("./data/skate/capture_events.rds")
 rates    <- readRDS("./data/skate/rates.rds")
 
 #### Define local parameters
 # Define whether or not to save figures
-save <- FALSE
+save <- TRUE
 
 
 #########################
@@ -63,6 +64,8 @@ rates$time_from_deck_to_obs <- as.integer(difftime(rates$time_stamp,
 range(rates$time_from_surface_to_deck)
 range(rates$time_from_deck_to_obs)
 rates <- rates[rates$time_from_deck_to_obs > 0, ]
+utils.add::basic_stats(rates$time_from_surface_to_deck)
+utils.add::basic_stats(rates$time_from_deck_to_obs)
 
 
 #########################
@@ -88,7 +91,7 @@ h <- cor.test(rates$hr[ind_cor], rates$rr[ind_cor], method = "spearman")
 #### Correlations
 # Note the relatively high (negative) correlation
 # ... between body size and time from capture to surface
-psych::pairs.panels(rates[, c(
+pretty_pairs(rates[, c(
   "hr", "rr",
   "sex",
   "size_len",
@@ -243,6 +246,15 @@ if (save) {
 }
 pp <- par(mfrow = c(2, 4), oma = c(2, 3, 2, 2), mar = rep(2, 4))
 
+## Define prediction constants
+# Where possible, we use the same values as for the physio models
+constants <- readRDS(here_data("helper", "constants.rds"))
+constants <- constants[, c("sex", "size_len", "temp_water", "time_from_capture_to_surface", 
+                           "gaff", "surgery")]
+constants$time_from_surface_to_deck <- 1  # median across all IDs
+constants$time_from_deck_to_obs     <- 11 # median across all IDs
+constants$event_id <- factor(10, levels = levels(rates$event_id))
+
 ## Define graphical param
 # Define data used for model fitting
 rates_in_mod <- model.frame(mod)
@@ -267,27 +279,32 @@ xlab_line <- 2.25
 main_adj <- 0
 main_font <- 2
 # Define point colours, shapes and sizes
-rates_in_mod$pt_pch <- 21
-rates_in_mod$pt_cex <- 0.75
-pt_param <- list(
-  col = scales::alpha("black", 0.75),
-  cex = rates_in_mod$pt_cex,
-  pch = rates_in_mod$pt_pch,
-  lwd = 0.75
-)
+jt <- 0.2
+pt_cex_adj <- 0.5
+pt_param$cex <- 1
+pt_param$col <- pt_cols_id$col[findInterval(as.integer(model.frame(mod)$event_id), pt_cols_id$breaks)]
+pt_param$bg  <- pt_param$col
+stopifnot(!any(is.na(pt_param$col)))
 # Adjust error bar parameters
-ebars_param$lwd <- 1.5
-ebars_param$add_fit$lwd <- 1.5
+ebars_param$lwd <- 2.5
+ebars_param$add_fit$pch <- "+"
+ebars_param$add_fit$lwd <- 1.25
+ebars_param$col <- scales::alpha("grey50", 0.95)
 
 ## Plot predictions for sex
 pretty_predictions_1d(
   model = mod,
   x_var = c("sex", "size_len"),
+  constants = constants,
   add_xlab = list(text = xlabs[1:2], line = xlab_line),
   add_ylab = NULL,
   add_main = list(text = c("A", "B"), adj = main_adj, font = main_font),
   add_error_bars = ebars_param,
+  add_error_envelope = eenv_param,
   add_points = pt_param,
+  add_points_jitter = list(sex = c(jt, 0)),
+  add_order = list(sex = c("points", "predictions"), 
+                   size_len = c("predictions", "points")),
   one_page = FALSE
 )
 
@@ -298,24 +315,20 @@ p_x <- seq(min(rates_for_resp$temp_water),
   max(rates_for_resp$temp_water),
   length.out = p_n
 )
-p_d <- data.frame(temp_water = p_x)
+p_d <- lapply(seq_len(length(p_x)), \(i) constants) |> dplyr::bind_rows()
 p_d$time_from_capture_to_surface <- min(rates_for_resp$time_from_capture_to_surface)
-p_d$sex <- factor("F", levels = c("F", "M"))
-p_d$size_len <- mean(rates_for_resp$size_len)
-p_d$gaff <- factor("N", levels = c("N", "F"))
-p_d$event_id <- factor(levels(rates_for_resp$event_id)[1], levels = levels(rates_for_resp$event_id))
-p_d$time_from_surface_to_deck <- median(rates_for_resp$time_from_surface_to_deck)
-p_d$time_from_deck_to_obs <- median(rates_for_resp$time_from_deck_to_obs)
+p_d$temp_water <- p_x
 # Plot predictions for effects of temperature when fight time is low
 pretty_predictions_1d(
   model = mod,
-  newdata = p_d[p_d$time_from_capture_to_surface == min(rates_for_resp$time_from_capture_to_surface), ],
+  newdata = p_d,
   x_var = "temp_water",
   add_points = NULL,
   add_error_envelope =
     list(
-      add_fit = list(col = "royalblue"),
-      add_ci = list(col = scales::alpha("skyblue", 0.2), border = FALSE)
+      add_fit = rlist::list.merge(eenv_param$add_fit, list(col = "royalblue")),
+      add_ci = rlist::list.merge(eenv_param$add_ci, list(col = scales::alpha("skyblue", 0.2))
+      )
     ),
   add_xlab = list(text = xlabs[3], line = xlab_line),
   add_ylab = NULL,
@@ -326,53 +339,55 @@ p_d$time_from_capture_to_surface <- max(rates_for_resp$time_from_capture_to_surf
 p_ci <- list_CIs(predict(mod, p_d, se.fit = TRUE, type = "response"))
 add_error_envelope(p_d$temp_water,
   p_ci,
-  add_fit = list(col = "darkred"),
-  add_ci = list(col = scales::alpha("red", 0.2), border = FALSE)
+  add_fit = rlist::list.merge(eenv_param$add_fit, list(col = "darkred")),
+  add_ci = rlist::list.merge(eenv_param$add_ci, 
+                             list(col = scales::alpha("red", 0.2)))
 )
 add_pt <- pt_param
 add_pt$x <- rates_for_resp$temp_water
 add_pt$y <- rates_for_resp$resp
-add_pt$cex <- rates_for_resp$time_from_capture_to_surface / 20
+add_pt$cex <- rates_for_resp$time_from_capture_to_surface / max(rates$time_from_capture_to_surface, na.rm = TRUE) + pt_cex_adj
+add_pt$col <- pt_cols_ft$col[findInterval(rates_for_resp$time_from_capture_to_surface, pt_cols_ft$breaks)]
+add_pt$bg  <- add_pt$col
+stopifnot(!any(is.na(add_pt$col)))
 px <- par(xpd = NA)
 do.call(points, add_pt)
 par(px)
-legend_pos <- "topleft"
 legend_adj <- 0.1
-if (resp %in% c("pH_1", "HCO3_1", "pH_2")) legend_pos <- "bottomleft"
-legend(legend_pos,
-  lty = c(1, 1),
-  col = c("royalblue", "darkred"),
-  lwd = c(1.5, 1.5),
-  legend = c(expression(T[L]), expression(T[H])),
-  adj = legend_adj,
-  bty = "n"
+legend("top",
+       lty = c(1, 1),
+       col = c("royalblue", "darkred"),
+       lwd = c(1.5, 1.5),
+       legend = c(
+         expression(E(T* ":" ~ FT[L])),
+         expression(E(T* ":" ~ FT[H]))
+       ),
+       adj = legend_adj,
+       bg = scales::alpha("white", 0.5), box.lwd = 0.5, box.lty = 3,
+       y.intersp = 1.2
 )
 
 ## Plot predictions for fight time (by temperature)
 # Define prediction data
 p_n <- 100
 p_x <- seq(min(rates_for_resp$time_from_capture_to_surface),
-  max(rates_for_resp$time_from_capture_to_surface),
-  length.out = p_n
+           max(rates_for_resp$time_from_capture_to_surface),
+           length.out = p_n
 )
-p_d <- data.frame(time_from_capture_to_surface = p_x)
+p_d <- lapply(seq_len(length(p_x)), \(i) constants) |> dplyr::bind_rows()
+p_d$time_from_capture_to_surface <- p_x
 p_d$temp_water <- min(rates_for_resp$temp_water)
-p_d$sex <- factor("F", levels = c("F", "M"))
-p_d$size_len <- mean(rates_for_resp$size_len)
-p_d$gaff <- factor("N", levels = c("N", "F"))
-p_d$event_id <- factor(levels(rates_for_resp$event_id)[1], levels = levels(rates_for_resp$event_id))
-p_d$time_from_surface_to_deck <- median(rates_for_resp$time_from_surface_to_deck)
-p_d$time_from_deck_to_obs <- median(rates_for_resp$time_from_deck_to_obs)
 # Plot predictions for effects of fight time in low temperatures
 pretty_predictions_1d(
   model = mod,
-  newdata = p_d[p_d$temp_water == min(rates_for_resp$temp_water), ],
+  newdata = p_d,
   x_var = "time_from_capture_to_surface",
   add_points = NULL,
   add_error_envelope =
     list(
-      add_fit = list(col = "royalblue"),
-      add_ci = list(col = scales::alpha("skyblue", 0.2), border = FALSE)
+      add_fit = rlist::list.merge(eenv_param$add_fit, list(col = "royalblue")),
+      add_ci = rlist::list.merge(eenv_param$add_ci, list(col = scales::alpha("skyblue", 0.2))
+      )
     ),
   add_xlab = list(text = xlabs[4], line = xlab_line),
   add_ylab = NULL,
@@ -383,43 +398,114 @@ p_d$temp_water <- max(rates_for_resp$temp_water)
 p_ci <- list_CIs(predict(mod, p_d, se.fit = TRUE, type = "response"))
 add_error_envelope(p_d$time_from_capture_to_surface,
   p_ci,
-  add_fit = list(col = "darkred"),
-  add_ci = list(col = scales::alpha("red", 0.2), border = FALSE)
+  add_fit = rlist::list.merge(eenv_param$add_fit, list(col = "darkred")),
+  add_ci = rlist::list.merge(eenv_param$add_ci, 
+                             list(col = scales::alpha("red", 0.2)))
 )
 add_pt <- pt_param
 add_pt$x <- rates_for_resp$time_from_capture_to_surface
 add_pt$y <- rates_for_resp$resp
-add_pt$cex <- rates_for_resp$temp_water / 12.5
+add_pt$cex <- rates_in_mod$temp_water / max(rates$temp_water, na.rm = TRUE) + 0
+  
+add_pt$col <- pt_cols_temp$col[findInterval(rates_for_resp$temp_water, pt_cols_temp$breaks)]
+add_pt$bg  <- add_pt$col
+stopifnot(!any(is.na(add_pt$col)))
+add_pt$bg <- add_pt$col
+px <- par(xpd = NA)
 do.call(points, add_pt)
-legend_pos <- "topright"
-legend(legend_pos,
-  lty = c(1, 1),
-  col = c("royalblue", "darkred"),
-  legend = c(expression(FT[L]), expression(FT[H])),
-  adj = legend_adj,
-  bty = "n"
+par(px)
+do.call(points, add_pt)
+legend("topright",
+       lty = c(1, 1),
+       col = c("royalblue", "darkred"),
+       lwd = c(1.5, 1.5),
+       legend = c(
+         expression(E(T* ":" ~ FT[L])),
+         expression(E(T* ":" ~ FT[H]))
+       ),
+       adj = legend_adj,
+       bg = scales::alpha("white", 0.5), box.lwd = 0.5, box.lty = 3,
+       y.intersp = 1.2
 )
 
 ## Plot predictions for surface time, gaff and and handling time
 pretty_predictions_1d(
   model = mod,
   x_var = c("time_from_surface_to_deck", "gaff", "time_from_deck_to_obs"),
+  constants = constants,
   add_error_bars = ebars_param,
+  add_error_envelope = eenv_param,
   add_points = pt_param,
+  add_points_jitter = list(gaff = c(jt, 0)),
+  add_order = list(
+    time_from_surface_to_deck = c("predictions", "points"),
+    gaff = c("points", "predictions"), 
+    time_from_deck_to_obs = c("predictions", "points")
+  ),
   add_xlab = list(text = xlabs[5:7], line = xlab_line),
   add_ylab = NULL,
   add_main = list(text = c("E", "F", "G"), adj = main_adj, font = main_font),
   one_page = FALSE
 )
+
+## Add legends 
+# Individual colour scale
+x <- zoo::rollmean(pt_cols_id$breaks, 2)
+plot(0, type = "n", 
+     xlim = c(0, 10), ylim = c(0, 10), 
+     axes = FALSE, xlab = "", ylab = "")
+TeachingDemos::subplot(
+  add_colour_bar(data.frame(x = x, col = pt_cols_id$col), 
+                 pretty_axis_args = pretty_axis(side = 4, 
+                                                lim = list(range(x)),
+                                                control_axis = list(pos = 1, las = TRUE),
+                                                add = FALSE)
+  ), 
+  x = c(0, 0.5), 
+  y = c(-0.5, 10)
+)
+mtext(side = 4, "Event", line = -10)
+# Fight time colour scale
+x <- zoo::rollmean(pt_cols_ft$breaks, 2)
+TeachingDemos::subplot(
+  add_colour_bar(data.frame(x = x, col = pt_cols_ft$col), 
+                 pretty_axis_args = pretty_axis(side = 4, 
+                                                lim = list(range(x)),
+                                                control_axis = list(pos = 1, las = TRUE),
+                                                add = FALSE)
+  ), 
+  x = c(4.5, 5), 
+  y = c(-0.5, 10)
+)
+mtext(side = 4,  expression(E(FT* ":" ~ T) ~ "[mins]"), line = -3.5)
+# Temperature colour scale 
+x <- zoo::rollmean(pt_cols_temp$breaks, 2)
+TeachingDemos::subplot(
+  add_colour_bar(data.frame(x = x, col = pt_cols_temp$col), 
+                 pretty_axis_args = pretty_axis(side = 4, 
+                                                lim = list(range(x)),
+                                                control_axis = list(pos = 1, las = TRUE),
+                                                add = FALSE)
+  ), 
+  x = c(9, 9.5), 
+  y = c(-0.5, 10)
+)
+mtext(side = 4,  expression(E(T* ":" ~ FT)~ "[" * degree * "C]"), line = 2)
+
+## Save
 mtext(side = 2, ylab, line = 1, outer = TRUE, cex = 1)
 par(pp)
 if (save) dev.off()
+open(paste0("./fig/", resp, ".png"))
+stop()
 
 #### Visualise predictions through time for each event
 ## Set up plot to save
-png(paste0("./fig/", resp, "_time_series.png"),
+if (save) {
+  png(paste0("./fig/", resp, "_time_series.png"),
   height = 12, width = 12, units = "in", res = 800
 )
+}
 
 ## Define graphical parameters
 cex.axis <- 1.4
@@ -509,7 +595,7 @@ mtext(
 )
 mtext(side = 2, ylab, line = 4, outer = TRUE, cex = 1.5)
 par(pp)
-dev.off()
+if (save) dev.off()
 
 
 #########################
