@@ -124,9 +124,25 @@ pt_param <- list(
   col = scales::alpha("green4", 0.75),
   bg = scales::alpha("green4", 0.75),
   cex = 1,
-  lwd = 0.75
+  lwd = 0
 )
 
+#### Colour bars
+# Fight time 
+pt_cols_ft    <- pretty_cols_brewer(c(9, 55), buffer = TRUE,
+                                    scheme = "RdBu", 
+                                    select = 1:11, # c(1:4, 7:11), 
+                                    rev = TRUE)
+# Temperature
+pt_cols_temp    <- pretty_cols_brewer(c(7.20, 13.96), buffer = TRUE, 
+                                      scheme = "RdBu", 
+                                      select = 1:11, # c(1:4, 7:11), 
+                                      rev = TRUE)
+# Individual
+pt_cols_id <- pretty_cols_brewer(c(1, 55), buffer = TRUE, 
+                                 n_breaks = 55,
+                                 pal = function(n) viridis::viridis(n, alpha = 0.7),
+                                 rev = TRUE)
 
 #### End of code.
 #########################

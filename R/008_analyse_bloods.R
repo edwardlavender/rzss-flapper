@@ -358,10 +358,6 @@ add_pt <- pt_param
 add_pt$x <- physio_in_mod$temp_water
 add_pt$y <- physio_in_mod$resp
 add_pt$cex <- physio_in_mod$time_from_capture_to_surface / max(physio$time_from_capture_to_surface, na.rm = TRUE) + pt_cex_adj
-pt_cols_ft    <- pretty_cols_brewer(range(physio$time_from_capture_to_surface, na.rm = TRUE), 
-                                    scheme = "RdBu", 
-                                    select = 1:11, # c(1:4, 7:11), 
-                                    rev = TRUE)
 add_pt$col <- pt_cols_ft$col[findInterval(physio_in_mod$time_from_capture_to_surface, pt_cols_ft$breaks)]
 stopifnot(!any(is.na(add_pt$col)))
 add_pt$bg <- add_pt$col
@@ -381,7 +377,7 @@ legend(legend_pos,
          expression(E(T* ":" ~ FT[H]))
        ),
        adj = legend_adj,
-       bg = scales::alpha("white", 0.5), , box.lwd = 0.5, box.lty = 3,
+       bg = scales::alpha("white", 0.5), box.lwd = 0.5, box.lty = 3,
        y.intersp = 1.2
 )
 
@@ -425,10 +421,6 @@ add_pt <- pt_param
 add_pt$x <- physio_in_mod$time_from_capture_to_surface
 add_pt$y <- physio_in_mod$resp
 add_pt$cex <- physio_in_mod$temp_water / max(physio$temp_water, na.rm = TRUE) + pt_cex_adj
-pt_cols_temp    <- pretty_cols_brewer(range(physio$temp_water, na.rm = TRUE), 
-                                      scheme = "RdBu", 
-                                      select = 1:11, # c(1:4, 7:11), 
-                                      rev = TRUE)
 add_pt$col <- pt_cols_temp$col[findInterval(physio_in_mod$temp, pt_cols_temp$breaks)]
 stopifnot(!any(is.na(add_pt$col)))
 add_pt$bg  <- add_pt$col
