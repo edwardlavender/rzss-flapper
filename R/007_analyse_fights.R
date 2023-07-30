@@ -25,11 +25,13 @@ library(prettyGraphics)
 
 #### Load data
 source(here_r("001_define_global_param.R"))
+source(here_r("002_define_helpers.R"))
 fights <- readRDS("./data/skate/fights.rds")
 
 #### Define local parameters
 # Define whether or not to save figures
 save <- TRUE
+set.seed(1)
 
 
 #########################
@@ -109,8 +111,18 @@ pp <- par(mfrow = c(1, 2))
 plot(mod, 1:2)
 par(pp)
 if (save) dev.off()
+# plot(DHARMa::simulateResiduals(mod))
 
 #### Model predictions
+## Graphical param
+pt_param$cex <- fights$size_area
+jt <- 0.2
+jt_param <-
+  list(sex = c(jt, 0))
+ebars_param$lwd <- 2.5
+ebars_param$add_fit$pch <- "+"
+ebars_param$add_fit$lwd <- 1.25
+ebars_param$col <- scales::alpha("grey50", 0.95)
 ## Pretty x axis labels
 xlabs <- c(
   "Sex",
@@ -130,14 +142,35 @@ pp <- par(oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
 pretty_predictions_1d(
   model = mod,
   average = median,
-  add_points = list(cex = fights$size_area, lwd = 0.5, col = "grey20"),
+  add_points = pt_param,
+  add_points_jitter = jt_param,
   add_error_bars = ebars_param,
+  add_error_envelope = eenv_param,
+  add_order = list(sex = c("points", "predictions"), 
+                   size_area = c("predictions", "points"), 
+                   current_speed = c("predictions", "points"), 
+                   sun = c("predictions", "points"), 
+                   temp_water = c("predictions", "points"), 
+                   depth = c("predictions", "points")),
   add_xlab = list(text = xlabs, line = 2.75),
   add_ylab = list(text = "Fight time [minutes]"),
   add_main = list(text = LETTERS[1:6], adj = 0, font = 2)
 )
+range(fights$size_area)
+px <- par(xpd = NA)
+legend(0.36, 1.1,
+       legend = c("0.5", "1.0", "1.5"), 
+       pch = pt_param$pch, 
+       col = pt_param$col,
+       cex = 0.8,
+       pt.bg = pt_param$bg,
+       pt.cex = c(0.5, 1, 1.5), 
+       horiz = FALSE, bty = "n")
+par(px)
+# axis(side = 1, col = "red"); axis(side = 2, col = "red")
 par(pp)
 if (save) dev.off()
+open("./fig/fight_time.png")
 
 
 #### End of code.
