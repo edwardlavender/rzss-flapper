@@ -386,8 +386,8 @@ legend(legend_pos,
        col = c("royalblue", "darkred"),
        lwd = c(1.5, 1.5),
        legend = c(
-         expression(E(T ~ "|" ~ FT[L])),
-         expression(E(T ~ "|" ~ FT[H]))
+         expression(E(T* ":" ~ FT[L])),
+         expression(E(T* ":" ~ FT[H]))
        ),
        adj = legend_adj,
        bg = scales::alpha("white", 0.5), , box.lwd = 0.5, box.lty = 3,
@@ -446,8 +446,8 @@ legend_adj <- 0.2
 legend(legend_pos,
        lty = c(1, 1),
        col = c("royalblue", "darkred"),
-       legend = c(expression(E(FT ~ "|" ~ T[L])), 
-                  expression(E(FT ~ "|" ~ T[H]))),
+       legend = c(expression(E(FT* ":" ~ T[L])), 
+                  expression(E(FT* ":" ~ T[H]))),
        adj = legend_adj,
        bg = scales::alpha("white", 0.5), box.lwd = 0.5, box.lty = 3,
        y.intersp = 1.2
@@ -497,7 +497,7 @@ TeachingDemos::subplot(
   x = c(1, 2), 
   y = c(-0.5, 10)
 )
-mtext(side = 4,  expression(E(FT ~ "|" ~ T) ~ "[mins]"), line = -10)
+mtext(side = 4,  expression(E(FT* ":" ~ T) ~ "[mins]"), line = -10)
 # Temperature colour scale 
 x <- zoo::rollmean(pt_cols_temp$breaks, 2)
 TeachingDemos::subplot(
@@ -510,7 +510,7 @@ TeachingDemos::subplot(
   x = c(6, 7), 
   y = c(-0.5, 10)
 )
-mtext(side = 4,  expression(E(T ~ "|" ~ FT)~ "[" * degree * "C]"), line = -2)
+mtext(side = 4,  expression(E(T* ":" ~ FT)~ "[" * degree * "C]"), line = -2)
 
 ## Global titles
 mtext(side = 2, ylabs[[substr(resp, 1, nchar(resp) - 2)]], line = 2.5, outer = TRUE)
@@ -625,8 +625,7 @@ coefs <-
   lapply(paste0(resps, "_", sample), function(resp) {
     # Fit model and get the number of observations used for model fitting
     # (... excluding K_2 and Mg_2 due to a lack of data)
-    if (!(resp %in% c("K_2", "Mg_2", 
-                      "PCO2_3", "PO2_3", "K_3", "Mg_3"))) {
+    if (!(resp %in% resps_exclude)) {
       print(resp)
       physio$resp <- physio[, resp]
       mod <- glm(form_1, family = gaussian(link = lf), data = physio)
