@@ -2148,7 +2148,7 @@
       "RemoteUsername": "edwardlavender",
       "RemoteRepo": "prettyGraphics",
       "RemoteRef": "master",
-      "RemoteSha": "adbfb505b862c47ea3c2356b92ae294a2801240a",
+      "RemoteSha": "a81a17ecd1419384a18fd7106be3644954e4d58a",
       "Requirements": [
         "R",
         "TeachingDemos",
@@ -2169,7 +2169,7 @@
         "sp",
         "stringr"
       ],
-      "Hash": "1dd6a728665c735efea23fc27d243eb4"
+      "Hash": "c14fd477212a710e9779a4ae6b1ab7a4"
     },
     "prettyunits": {
       "Package": "prettyunits",
