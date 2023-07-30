@@ -457,6 +457,7 @@ if (save) dev.off()
 #### Model diagnostics
 
 #### Model residuals
+# Standard residuals 
 if (save) {
   png(paste0("./fig/", resp, "_diagnostics.png"),
       height = 5.5, width = 9, units = "in", res = 600
@@ -466,6 +467,14 @@ pp <- par(mfrow = c(1, 2))
 # car::qqPlot(mod, line = "none", rep = 1e3)
 plot(mod, 1:2)
 par(pp)
+if (save) dev.off()
+# DHARMA
+if (save) {
+  png(paste0("./fig/", resp, "_diagnostics_dharma.png"),
+      height = 5.5, width = 9, units = "in", res = 600
+  )
+}
+plot(DHARMa::simulateResiduals(mod))
 if (save) dev.off()
 
 #### Predictive accuracy
