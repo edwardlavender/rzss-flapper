@@ -70,6 +70,7 @@ read_vitals <- function(sheets, anchor = "G2", cl = NULL) {
     # print(head(rates, 3))
     rates <- rates[, c("Time", "HR", "RR")]
     rates$pit <- as.character(rates_raw[9, 2])
+    rates$vemco <- as.character(rates_raw[11, 2])
     rates$date <- substr(sheet, 1, 8)
     rates$sheet_name <- sheet
     rates$sheet_index <- i
@@ -107,6 +108,7 @@ rates <-
     sheet_index = sheet_index,
     sheet_name = sheet_name,
     pit = pit,
+    vemco = vemco,
     date = date,
     time = Time,
     hr = HR,
@@ -134,6 +136,15 @@ data.frame(rates[!(rates$pit %in% physio$pit), ])
 ## Make pit factor
 rates$pit <- factor(rates$pit)
 table(rates$pit)
+
+#### Check vemco numbers
+sort(unique(rates$vemco))
+rates$vemco[!stringr::str_detect(rates$vemco, "[0-9]")] <- NA
+sort(unique(rates$vemco))
+rates$surgery <- rates$vemco
+rates$surgery[is.na(rates$surgery)] <- "N"
+rates$surgery[rates$surgery != "N"] <- "Y"
+rates$surgery <- factor(rates$surgery, levels = c("N", "Y"))
 
 #### Fix HR/HR integers
 ## Heart rate
@@ -214,6 +225,8 @@ rates <-
     sheet_index,
     sheet_name,
     pit,
+    vemco,
+    surgery,
     sex,
     size_len,
     size_disc,
