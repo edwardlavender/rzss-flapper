@@ -363,6 +363,7 @@ pt_cols_ft    <- pretty_cols_brewer(range(physio$time_from_capture_to_surface, n
                                     select = 1:11, # c(1:4, 7:11), 
                                     rev = TRUE)
 add_pt$col <- pt_cols_ft$col[findInterval(physio_in_mod$time_from_capture_to_surface, pt_cols_ft$breaks)]
+stopifnot(!any(is.na(add_pt$col)))
 add_pt$bg <- add_pt$col
 px <- par(xpd = NA)
 do.call(points, add_pt)
@@ -429,6 +430,7 @@ pt_cols_temp    <- pretty_cols_brewer(range(physio$temp_water, na.rm = TRUE),
                                       select = 1:11, # c(1:4, 7:11), 
                                       rev = TRUE)
 add_pt$col <- pt_cols_temp$col[findInterval(physio_in_mod$temp, pt_cols_temp$breaks)]
+stopifnot(!any(is.na(add_pt$col)))
 add_pt$bg  <- add_pt$col
 do.call(points, add_pt)
 legend_adj <- 0.2
