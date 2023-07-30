@@ -22,10 +22,14 @@ dv::clear()
 
 #### Essential packages
 library(dv)
+library(ggplot2)
 library(prettyGraphics)
 library(dplyr)
 library(mgcv)
-library(ggplot2)
+# Nominal call to {mgcViz} for DHARMa
+if (!requireNamespace("mgcViz", quietly = TRUE)) {
+  install.packages("mgcViz")
+}
 
 #### Load data
 source(here_r("001_define_global_param.R"))
@@ -35,7 +39,8 @@ rates    <- readRDS("./data/skate/rates.rds")
 
 #### Define local parameters
 # Define whether or not to save figures
-save <- TRUE
+save <- FALSE
+set.seed(1)
 
 
 #########################
@@ -99,11 +104,12 @@ pretty_pairs(rates[, c(
   "time_from_surface_to_deck",
   "temp_water",
   "gaff",
-  "healthy"
+  "healthy", 
+  "surgery"
 )])
 
 #### Define response variable
-resp <- "hr" # "hr"
+resp <- "rr" # "hr"
 rates$resp <- rates[, resp]
 rates_for_resp <- rates[, c(
   "event_id_int", "event_id",
@@ -111,7 +117,7 @@ rates_for_resp <- rates[, c(
   "sex", "size_len",
   "time_from_capture_to_surface", "temp_water",
   "time_from_surface_to_deck",
-  "gaff", "time_from_deck_to_obs"
+  "gaff", "surgery", "time_from_deck_to_obs"
 )]
 rates_for_resp <- rates_for_resp[complete.cases(rates_for_resp), ]
 rates_for_resp$event_id <- factor(rates_for_resp$event_id)
@@ -163,15 +169,16 @@ ggplot() +
 #### Model fitting
 
 #### Implement model(s)
+fam <- nb()
 mod_1 <- gam(
   resp ~
     sex + size_len +
     temp_water * time_from_capture_to_surface +
     time_from_surface_to_deck +
-    gaff +
+    gaff + surgery + 
     s(event_id, bs = "re") +
     s(event_id, time_from_deck_to_obs, bs = "re"),
-  family = nb(),
+  family = fam,
   data = rates_for_resp,
   method = "REML"
 )
@@ -179,12 +186,21 @@ mod_2 <- gam(
   resp ~
     sex + temp_water * time_from_capture_to_surface +
     time_from_surface_to_deck +
-    gaff +
+    gaff + surgery + 
     te(size_len, time_from_deck_to_obs),
-  family = nb(),
+  family = fam,
   data = rates_for_resp,
   method = "REML"
 )
+
+#### Quick diagnostics
+if (FALSE) {
+  pp <- par(mfrow = c(2, 2))
+  gam.check(mod_1, rep = 1000, type = "deviance")
+  plot(DHARMa::simulateResiduals(mod_1))
+  par(pp)
+  stop("Checked!")
+}
 
 
 #########################
@@ -226,6 +242,7 @@ predict(mod,
     temp_water = median(rates_for_resp$temp_water),
     time_from_surface_to_deck = median(rates_for_resp$time_from_surface_to_deck),
     gaff = factor("N", levels = c("N", "Y")),
+    surgery = factor("Y", levels = c("N", "Y")),
     event_id = factor(levels(rates_for_resp$event_id)[1],
       levels = levels(rates_for_resp$event_id)
     ),
@@ -431,15 +448,16 @@ legend("topright",
 ## Plot predictions for surface time, gaff and and handling time
 pretty_predictions_1d(
   model = mod,
-  x_var = c("time_from_surface_to_deck", "gaff", "time_from_deck_to_obs"),
+  x_var = c("time_from_surface_to_deck", "gaff", "surgery", "time_from_deck_to_obs"),
   constants = constants,
   add_error_bars = ebars_param,
   add_error_envelope = eenv_param,
   add_points = pt_param,
-  add_points_jitter = list(gaff = c(jt, 0)),
+  add_points_jitter = list(gaff = c(jt, 0), surgery = c(jt, 0)),
   add_order = list(
     time_from_surface_to_deck = c("predictions", "points"),
     gaff = c("points", "predictions"), 
+    surgery = c("points", "predictions"),
     time_from_deck_to_obs = c("predictions", "points")
   ),
   add_xlab = list(text = xlabs[5:7], line = xlab_line),
@@ -448,56 +466,58 @@ pretty_predictions_1d(
   one_page = FALSE
 )
 
-## Add legends 
-# Individual colour scale
-x <- zoo::rollmean(pt_cols_id$breaks, 2)
-plot(0, type = "n", 
-     xlim = c(0, 10), ylim = c(0, 10), 
-     axes = FALSE, xlab = "", ylab = "")
-TeachingDemos::subplot(
-  add_colour_bar(data.frame(x = x, col = pt_cols_id$col), 
-                 pretty_axis_args = pretty_axis(side = 4, 
-                                                lim = list(range(x)),
-                                                control_axis = list(pos = 1, las = TRUE),
-                                                add = FALSE)
-  ), 
-  x = c(0, 0.5), 
-  y = c(-0.5, 10)
-)
-mtext(side = 4, "Event", line = -10)
-# Fight time colour scale
-x <- zoo::rollmean(pt_cols_ft$breaks, 2)
-TeachingDemos::subplot(
-  add_colour_bar(data.frame(x = x, col = pt_cols_ft$col), 
-                 pretty_axis_args = pretty_axis(side = 4, 
-                                                lim = list(range(x)),
-                                                control_axis = list(pos = 1, las = TRUE),
-                                                add = FALSE)
-  ), 
-  x = c(4.5, 5), 
-  y = c(-0.5, 10)
-)
-mtext(side = 4,  expression(E(FT* ":" ~ T) ~ "[mins]"), line = -3.5)
-# Temperature colour scale 
-x <- zoo::rollmean(pt_cols_temp$breaks, 2)
-TeachingDemos::subplot(
-  add_colour_bar(data.frame(x = x, col = pt_cols_temp$col), 
-                 pretty_axis_args = pretty_axis(side = 4, 
-                                                lim = list(range(x)),
-                                                control_axis = list(pos = 1, las = TRUE),
-                                                add = FALSE)
-  ), 
-  x = c(9, 9.5), 
-  y = c(-0.5, 10)
-)
-mtext(side = 4,  expression(E(T* ":" ~ FT)~ "[" * degree * "C]"), line = 2)
+## Add legends
+if (FALSE) {
+  # Individual colour scale
+  x <- zoo::rollmean(pt_cols_id$breaks, 2)
+  plot(0, type = "n", 
+       xlim = c(0, 10), ylim = c(0, 10), 
+       axes = FALSE, xlab = "", ylab = "")
+  TeachingDemos::subplot(
+    add_colour_bar(data.frame(x = x, col = pt_cols_id$col), 
+                   pretty_axis_args = pretty_axis(side = 4, 
+                                                  lim = list(range(x)),
+                                                  control_axis = list(pos = 1, las = TRUE),
+                                                  add = FALSE)
+    ), 
+    x = c(0, 0.5), 
+    y = c(-0.5, 10)
+  )
+  mtext(side = 4, "Event", line = -10)
+  # Fight time colour scale
+  x <- zoo::rollmean(pt_cols_ft$breaks, 2)
+  TeachingDemos::subplot(
+    add_colour_bar(data.frame(x = x, col = pt_cols_ft$col), 
+                   pretty_axis_args = pretty_axis(side = 4, 
+                                                  lim = list(range(x)),
+                                                  control_axis = list(pos = 1, las = TRUE),
+                                                  add = FALSE)
+    ), 
+    x = c(4.5, 5), 
+    y = c(-0.5, 10)
+  )
+  mtext(side = 4,  expression(E(FT* ":" ~ T) ~ "[mins]"), line = -3.5)
+  # Temperature colour scale 
+  x <- zoo::rollmean(pt_cols_temp$breaks, 2)
+  TeachingDemos::subplot(
+    add_colour_bar(data.frame(x = x, col = pt_cols_temp$col), 
+                   pretty_axis_args = pretty_axis(side = 4, 
+                                                  lim = list(range(x)),
+                                                  control_axis = list(pos = 1, las = TRUE),
+                                                  add = FALSE)
+    ), 
+    x = c(9, 9.5), 
+    y = c(-0.5, 10)
+  )
+  mtext(side = 4,  expression(E(T* ":" ~ FT)~ "[" * degree * "C]"), line = 2) 
+}
 
 ## Save
 mtext(side = 2, ylab, line = 1, outer = TRUE, cex = 1)
 par(pp)
 if (save) dev.off()
-open(paste0("./fig/", resp, ".png"))
-stop()
+# open(paste0("./fig/", resp, ".png"))
+# stop()
 
 #### Visualise predictions through time for each event
 ## Set up plot to save
@@ -611,6 +631,9 @@ pp <- par(mfrow = c(2, 2))
 gam.check(mod, rep = 1000, type = "deviance")
 par(pp)
 if (save) dev.off()
+
+#### DHARMa residuals
+plot(DHARMa::simulateResiduals(mod))
 
 
 #### End of code.
