@@ -137,6 +137,7 @@ if (sample == 1) {
                   physio$time_from_surface_to_bs2, 
                 na.rm = TRUE))
 }
+saveRDS(form_1, here_data("helper", paste0("formula_", sample, ".rds")))
 
 #### Correlations
 str(physior[, all.vars(form_1)])
@@ -222,16 +223,17 @@ cowplot::plot_grid(plotlist =
 #### Define prediction constants
 # This fixes constants across all plots
 constants <- 
-  data.frame(time_from_capture_to_surface = mean(physio$time_from_capture_to_surface, na.rm = TRUE), 
-             temp_water                   = mean(physio$temp_water, na.rm = TRUE),
+  data.frame(time_from_capture_to_surface = median(physio$time_from_capture_to_surface, na.rm = TRUE), 
+             temp_water                   = median(physio$temp_water, na.rm = TRUE),
              sex                          = factor("F", levels = c("F", "M")), 
-             size_len                     = mean(physio$size_len, na.rm = TRUE), 
-             time_from_surface_to_bs1     = mean(physio$time_from_surface_to_bs1, na.rm = TRUE), 
-             time_from_surface_to_bs2     = mean(physio$time_from_surface_to_bs2, na.rm = TRUE), 
-             time_from_bs1_to_bs2         = mean(physio$time_from_bs1_to_bs2, na.rm = TRUE), 
+             size_len                     = median(physio$size_len, na.rm = TRUE), 
+             time_from_surface_to_bs1     = median(physio$time_from_surface_to_bs1, na.rm = TRUE), 
+             time_from_surface_to_bs2     = median(physio$time_from_surface_to_bs2, na.rm = TRUE), 
+             time_from_bs1_to_bs2         = median(physio$time_from_bs1_to_bs2, na.rm = TRUE), 
              surgery                      = factor("Y", levels = c("N", "Y")), 
              gaff                         = factor("N", levels = c("N", "F")), 
              time_index                   = 1)
+saveRDS(constants, here_data("helper", "constants.rds"))
 
 #### Visualise model predictions for each variable
 ## Set up figure to save
