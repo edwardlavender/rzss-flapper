@@ -243,7 +243,7 @@ if (save) {
       height = height, width = width, units = "in", res = 600)
 }
 # pp <- par(mfrow = mf, oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
-pp <- par(mfrow = c(2, 4), oma = c(2, 3, 2, 2), mar = c(2.1, 2, 2.1, 2))
+pp <- par(mfrow = mf, oma = c(2, 3, 2, 2), mar = c(2.1, 2, 2.1, 2))
 
 ## Define graphical param
 # Define data used for model fitting
