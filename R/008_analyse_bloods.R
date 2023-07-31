@@ -66,7 +66,7 @@ physio$vemco[physio$surgery == "Y"]
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
 yvar <- "pH"
-sample <- "3"
+sample <- "2"
 resp <- paste0(yvar, "_", sample)
 
 #### Focus on specific columns
@@ -229,7 +229,7 @@ saveRDS(constants, here_data("helper", "constants.rds"))
 #### Visualise model predictions for each variable
 ## Set up figure to save
 if (sample %in% c(1, 2)) {
-  height <- 5.5; width <- 12
+  height <- 4.5; width <- 10
   mf <- c(2, 4)
 } else {
   height <- 7.5; width <- 9
@@ -239,8 +239,8 @@ if (save) {
   png(paste0("./fig/", resp, "_preds.png"),
       height = height, width = width, units = "in", res = 600)
 }
-
-pp <- par(mfrow = mf, oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
+# pp <- par(mfrow = mf, oma = c(2, 2, 2, 2), mar = rep(2.5, 4))
+pp <- par(mfrow = c(2, 4), oma = c(2, 3, 2, 2), mar = c(2.1, 2, 2.1, 2))
 
 ## Define graphical param
 # Define data used for model fitting
@@ -249,7 +249,7 @@ physio_in_mod <- model.frame(mod)
 if (sample %in% c(1, 2)) {
   ylim <- ylims[[substr(resp, 1, nchar(resp) - 2)]]
 } else {
-  ylim <- NULL
+  ylim <- ylims_3[[substr(resp, 1, nchar(resp) - 2)]]
 }
 
 # Define titles
@@ -478,10 +478,10 @@ TeachingDemos::subplot(
                                                 control_axis = list(pos = 1, las = TRUE),
                                                 add = FALSE)
   ), 
-  x = c(1, 2), 
+  x = c(0, 1), 
   y = c(-0.5, 10)
 )
-mtext(side = 4,  expression(E(FT* ":" ~ T) ~ "[mins]"), line = -10)
+mtext(side = 4,  expression(E(FT* ":" ~ T) ~ "[mins]"), line = -8.75)
 # Temperature colour scale 
 x <- zoo::rollmean(pt_cols_temp$breaks, 2)
 TeachingDemos::subplot(
@@ -494,14 +494,19 @@ TeachingDemos::subplot(
   x = c(6, 7), 
   y = c(-0.5, 10)
 )
-mtext(side = 4,  expression(E(T* ":" ~ FT)~ "[" * degree * "C]"), line = -2)
+mtext(side = 4,  expression(E(T* ":" ~ FT)~ "[" * degree * "C]"), line = -1)
 
 ## Global titles
-mtext(side = 2, ylabs[[substr(resp, 1, nchar(resp) - 2)]], line = 2.5, outer = TRUE)
+if (sample %in% c(1, 2)) {
+  ylab <- ylabs[[substr(resp, 1, nchar(resp) - 2)]]
+} else if (sample == 3) {
+  ylab <- ylabs_3[[substr(resp, 1, nchar(resp) - 2)]]
+}
+mtext(side = 2, ylab, line = 0, outer = TRUE)
 par(pp)
 if (save) dev.off()
-# open(paste0("./fig/", resp, "_preds.png"))
-# stop("Done!")
+open(paste0("./fig/", resp, "_preds.png"))
+stop("Done!")
 
 
 #########################

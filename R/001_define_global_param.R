@@ -52,6 +52,16 @@ ylabs <- list(
   K = expression(K^"+" ~ "[mmol" * L^-1 * "]"),
   Mg = expression(Mg^"2+" ~ "[mmol" * L^-1 * "]")
 )
+ylabs_3 <- list(
+  pH = "pH",
+  PCO2 = expression(Delta * PCO[2] ~ "[mmHg]"),
+  PO2 = expression(Delta * PO[2] ~ "[mmHg]"),
+  HCO3 = expression(Delta * HCO[3]^" -" ~ "[mmol" * L^-1 * "]"),
+  lac = expression(Delta * "Lac [mmol" * L^-1 * "]"),
+  glu = expression(Delta * "Glu [mmol" * L^-1 * "]"),
+  K = expression(Delta * K^"+" ~ "[mmol" * L^-1 * "]"),
+  Mg = expression(Delta * Mg^"2+" ~ "[mmol" * L^-1 * "]")
+)
 ## Define legend labels
 ylabs_legend <- c(
   expression("pH"),
@@ -92,6 +102,13 @@ ylims <- list(
   glu = c(0.5, 3),
   K = c(0, 12),
   Mg = c(0.7, 1.7)
+)
+ylims_3 <- list(
+  pH = c(-0.4, 0.3),
+  PCO2 = c(-6, 5),
+  HCO3 = c(-3, 1.5),
+  lac =  c(-2, 3),
+  glu = c(-1, 1)
 )
 ## Excludes
 resps_exclude <- c("K_2", "Mg_2", "PCO2_3", "PO2_3", "K_3", "Mg_3")

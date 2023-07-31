@@ -261,7 +261,8 @@ if (save) {
     height = 4.5, width = 10, units = "in", res = 600
   )
 }
-pp <- par(mfrow = c(2, 4), oma = c(2, 3, 2, 2), mar = rep(2, 4))
+# pp <- par(mfrow = c(2, 4), oma = c(2, 3, 2, 2), mar = rep(2, 4))
+pp <- par(mfrow = c(2, 4), oma = c(2, 3, 2, 2), mar = c(2.1, 2, 2.1, 2))
 
 ## Define prediction constants
 # Where possible, we use the same values as for the physio models
