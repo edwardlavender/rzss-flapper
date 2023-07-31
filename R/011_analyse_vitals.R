@@ -39,7 +39,7 @@ rates    <- readRDS("./data/skate/rates.rds")
 
 #### Define local parameters
 # Define whether or not to save figures
-save <- FALSE
+save <- TRUE
 set.seed(1)
 
 
@@ -109,7 +109,7 @@ pretty_pairs(rates[, c(
 )])
 
 #### Define response variable
-resp <- "rr" # "hr"
+resp <- "hr" # "hr"
 rates$resp <- rates[, resp]
 rates_for_resp <- rates[, c(
   "event_id_int", "event_id",
@@ -290,6 +290,7 @@ xlabs <- c(
   expression("Time (hook" %->% "surface) [mins]"),
   expression("Time (surface" %->% "deck) [mins]"),
   "Gaff",
+  "Surgery",
   expression("Time (deck" %->% "observation) [mins]")
 )
 # Define title param
@@ -461,7 +462,7 @@ pretty_predictions_1d(
     surgery = c("points", "predictions"),
     time_from_deck_to_obs = c("predictions", "points")
   ),
-  add_xlab = list(text = xlabs[5:7], line = xlab_line),
+  add_xlab = list(text = xlabs[5:8], line = xlab_line),
   add_ylab = NULL,
   add_main = list(text = c("E", "F", "G"), adj = main_adj, font = main_font),
   one_page = FALSE

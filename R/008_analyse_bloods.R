@@ -66,7 +66,7 @@ physio$vemco[physio$surgery == "Y"]
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
 yvar <- "pH"
-sample <- "2"
+sample <- "3"
 # lapply(resps, function(yvar) {
 #   lapply(c("1", "2", "3"), function(sample) {
 
@@ -451,7 +451,8 @@ add_order <-
            c(x_var_time, "time_from_bs1_to_bs2", "gaff", "surgery"))
 x_var <- c(x_var_time, "time_from_bs1_to_bs2", "gaff", "surgery")
 x_var <- x_var[x_var %in% all.vars(form_1)]
-x_var <- setNames(x_var, LETTERS[5:(5 + length(x_var) - 1)])
+pos <- 5:(5 + length(x_var) - 1)
+x_var <- setNames(x_var, LETTERS[pos])
 pretty_predictions_1d(
   model = mod,
   x_var = x_var,
@@ -462,7 +463,7 @@ pretty_predictions_1d(
   add_error_envelope = eenv_param,
   add_points = pt_param,
   add_points_jitter = jt_param,
-  add_xlab = list(text = xlabs[5:7], line = xlab_line),
+  add_xlab = list(text = xlabs[pos], line = xlab_line),
   add_ylab = NULL,
   add_main = list(text = names(x_var), adj = main_adj, font = main_font),
   one_page = FALSE
@@ -505,7 +506,7 @@ if (sample %in% c(1, 2)) {
 } else if (sample == 3) {
   ylab <- ylabs_3[[substr(resp, 1, nchar(resp) - 2)]]
 }
-mtext(side = 2, ylab, line = 0, outer = TRUE)
+mtext(side = 2, ylab, line = 1, outer = TRUE)
 par(pp)
 if (save) dev.off()
 # open(paste0("./fig/", resp, "_preds.png"))

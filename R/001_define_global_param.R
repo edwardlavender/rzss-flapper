@@ -104,7 +104,7 @@ ylims <- list(
   Mg = c(0.7, 1.7)
 )
 ylims_3 <- list(
-  pH = c(-0.4, 0.3),
+  pH = c(-0.4, 0.4),
   PCO2 = c(-6, 5),
   HCO3 = c(-3, 1.5),
   lac =  c(-2, 3),
