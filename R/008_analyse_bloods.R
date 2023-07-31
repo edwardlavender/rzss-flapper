@@ -67,6 +67,9 @@ physio$vemco[physio$surgery == "Y"]
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
 yvar <- "pH"
 sample <- "2"
+# lapply(resps, function(yvar) {
+#   lapply(c("1", "2", "3"), function(sample) {
+
 resp <- paste0(yvar, "_", sample)
 
 #### Focus on specific columns
@@ -505,8 +508,8 @@ if (sample %in% c(1, 2)) {
 mtext(side = 2, ylab, line = 0, outer = TRUE)
 par(pp)
 if (save) dev.off()
-open(paste0("./fig/", resp, "_preds.png"))
-stop("Done!")
+# open(paste0("./fig/", resp, "_preds.png"))
+# stop("Done!")
 
 
 #########################
@@ -674,6 +677,12 @@ if (!inherits(coefs$D, "character")) {
 coefs$star <- ""
 coefs$star[as.numeric(coefs$`p-value`) <= 0.05] <- "*"
 # View(coefs)
+
+
+#  })
+#})
+
+
 
 
 #### End of code.
