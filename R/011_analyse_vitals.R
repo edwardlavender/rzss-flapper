@@ -109,7 +109,7 @@ pretty_pairs(rates[, c(
 )])
 
 #### Define response variable
-resp <- "hr" # "hr"
+resp <- "rr" # "hr"
 rates$resp <- rates[, resp]
 rates_for_resp <- rates[, c(
   "event_id_int", "event_id",
@@ -212,8 +212,8 @@ message(round(max(ranks$AIC) - min(ranks$AIC), digits = 2))
 message(rownames(ranks)[which.min(ranks$AIC)])
 mod <- get(rownames(ranks)[which.min(ranks$AIC)])
 mod <- mod_1
-# hr: delta AIC = 15.6
-# rr: delta AIC = 112.23
+# hr: delta AIC = 16.24
+# rr: delta AIC = 111.96
 
 #### Model summary
 summary(mod, digits = 3)
