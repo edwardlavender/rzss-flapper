@@ -468,8 +468,19 @@ pretty_predictions_1d(
   one_page = FALSE
 )
 
+## Save
+mtext(side = 2, ylab, line = 1, outer = TRUE, cex = 1)
+par(pp)
+if (save) dev.off()
+# open(paste0("./fig/", resp, ".png"))
+# stop()
+
+## Legends
 ## Add legends
-if (FALSE) {
+if (TRUE) {
+  png("./fig/colour-bars.png", 
+      height = 5, width = 5, units = "in", res = 600)
+  cex.axis <- 1.2
   # Individual colour scale
   x <- zoo::rollmean(pt_cols_id$breaks, 2)
   plot(0, type = "n", 
@@ -477,49 +488,44 @@ if (FALSE) {
        axes = FALSE, xlab = "", ylab = "")
   TeachingDemos::subplot(
     add_colour_bar(data.frame(x = x, col = pt_cols_id$col), 
-                   pretty_axis_args = pretty_axis(side = 4, 
+                   pretty_axis_args = pretty_axis(side = 2, 
                                                   lim = list(range(x)),
-                                                  control_axis = list(pos = 1, las = TRUE),
+                                                  control_axis = list(pos = 0, las = FALSE, cex.axis = cex.axis),
                                                   add = FALSE)
     ), 
     x = c(0, 0.5), 
     y = c(-0.5, 10)
   )
-  mtext(side = 4, "Event", line = -10)
+  #mtext(side = 4, "Event", line = -10)
   # Fight time colour scale
   x <- zoo::rollmean(pt_cols_ft$breaks, 2)
   TeachingDemos::subplot(
     add_colour_bar(data.frame(x = x, col = pt_cols_ft$col), 
-                   pretty_axis_args = pretty_axis(side = 4, 
+                   pretty_axis_args = pretty_axis(side = 2, 
                                                   lim = list(range(x)),
-                                                  control_axis = list(pos = 1, las = TRUE),
+                                                  control_axis = list(pos = 0, las = FALSE, cex.axis = cex.axis),
                                                   add = FALSE)
-    ), 
+    ),
     x = c(4.5, 5), 
     y = c(-0.5, 10)
   )
-  mtext(side = 4,  expression(E(FT* ":" ~ T) ~ "[mins]"), line = -3.5)
+  # mtext(side = 4,  expression(E(FT* ":" ~ T) ~ "[mins]"), line = -3.5)
   # Temperature colour scale 
   x <- zoo::rollmean(pt_cols_temp$breaks, 2)
   TeachingDemos::subplot(
     add_colour_bar(data.frame(x = x, col = pt_cols_temp$col), 
-                   pretty_axis_args = pretty_axis(side = 4, 
+                   pretty_axis_args = pretty_axis(side = 2, 
                                                   lim = list(range(x)),
-                                                  control_axis = list(pos = 1, las = TRUE),
+                                                  control_axis = list(pos = 0, las = FALSE, cex.axis = cex.axis),
                                                   add = FALSE)
     ), 
     x = c(9, 9.5), 
     y = c(-0.5, 10)
   )
-  mtext(side = 4,  expression(E(T* ":" ~ FT)~ "[" * degree * "C]"), line = 2) 
+  #mtext(side = 4,  expression(E(T* ":" ~ FT)~ "[" * degree * "C]"), line = 2) 
+  dev.off()
 }
 
-## Save
-mtext(side = 2, ylab, line = 1, outer = TRUE, cex = 1)
-par(pp)
-if (save) dev.off()
-# open(paste0("./fig/", resp, ".png"))
-# stop()
 
 #### Visualise predictions through time for each event
 ## Set up plot to save
