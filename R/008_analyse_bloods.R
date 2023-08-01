@@ -66,9 +66,9 @@ physio$vemco[physio$surgery == "Y"]
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
 yvar <- "pH"
-sample <- "3"
-# lapply(resps, function(yvar) {
-#   lapply(c("1", "2", "3"), function(sample) {
+sample <- "1"
+ lapply(resps, function(yvar) {
+   lapply(c("1", "2", "3"), function(sample) {
 
 resp <- paste0(yvar, "_", sample)
 
@@ -485,7 +485,7 @@ TeachingDemos::subplot(
   x = c(0, 1), 
   y = c(-0.5, 10)
 )
-mtext(side = 4,  expression(E(FT* ":" ~ T) ~ "[mins]"), line = -8.75)
+mtext(side = 4,  expression(FT ~ "[mins]"), line = -8.75)
 # Temperature colour scale 
 x <- zoo::rollmean(pt_cols_temp$breaks, 2)
 TeachingDemos::subplot(
@@ -498,7 +498,7 @@ TeachingDemos::subplot(
   x = c(6, 7), 
   y = c(-0.5, 10)
 )
-mtext(side = 4,  expression(E(T* ":" ~ FT)~ "[" * degree * "C]"), line = -1)
+mtext(side = 4,  expression(T ~ "[" * degree * "C]"), line = -1)
 
 ## Global titles
 if (sample %in% c(1, 2)) {
@@ -680,8 +680,8 @@ coefs$star[as.numeric(coefs$`p-value`) <= 0.05] <- "*"
 # View(coefs)
 
 
-#  })
-#})
+  })
+})
 
 
 
