@@ -31,7 +31,7 @@ source(here_r("001_define_global_param.R"))
 physio <- readRDS("./data/skate/physio.rds")
 
 #### Define param
-save <- FALSE
+save <- TRUE
 set.seed(1)
 
 
@@ -43,7 +43,7 @@ set.seed(1)
 #### Set up simulations
 
 #### Define blood sample ("1", "2", "3") and response variables
-sample <- "2"
+sample <- "3"
 if (sample == "1") {
   resps_for_bs <- paste0(resps, "_1")
 } else if (sample == "2") {
@@ -128,7 +128,7 @@ if (sample == 1) {
     temp_2 = expression("T:" ~ FT[H]),
     time_fight_1 = expression("FT:" ~ T[L]),
     time_fight_2 = expression("FT:" ~ T[H]),
-    time_to_sample = expression(ST[]),
+    time_to_sample = expression(ST[S]),
     gaff = expression(Gaff[Y])
   )
 } else if (sample == 2) {
@@ -139,7 +139,7 @@ if (sample == 1) {
     temp_2 = expression("T:" ~ FT[H]),
     time_fight_1 = expression("FT:" ~ T[L]),
     time_fight_2 = expression("FT:" ~ T[H]),
-    time_to_sample = expression(ST[]),
+    time_to_sample = expression(ST[S]),
     gaff = expression(Gaff[Y]), 
     surgery = expression(Tag[Y])
   )
@@ -151,8 +151,8 @@ if (sample == 1) {
     temp_2 = expression("T:" ~ FT[H]),
     time_fight_1 = expression("FT:" ~ T[L]),
     time_fight_2 = expression("FT:" ~ T[H]),
-    time_to_sample = expression(ST[1]),
-    time_btw_sample = expression(ST[2]),
+    time_to_sample = expression(ST[S]),
+    time_btw_sample = expression(ST[Delta]),
     gaff = expression(Gaff[Y]), 
     surgery = expression(Tag[Y])
   )
@@ -285,8 +285,16 @@ stopifnot(!any(is.na(outsims$col)))
 
 #### Set up plot to save
 if (save) {
+  height <- 8
+  width  <- 8
+  if (sample == "2") {
+    height <- 6
+  } else if (sample == "3") {
+    height <- 6
+    width <- 12
+  }
   png(paste0("./fig/blood_ratios_", sample, ".png"),
-  height = 6, width = 6, units = "in", res = 600
+  height = height, width = width, units = "in", res = 600
 )
 }
 pp <- par(
@@ -316,13 +324,14 @@ lapply(1:length(outsims_by_resps), function(i) {
               y = range(c(outsim$lowerCI, outsim$upperCI), na.rm = TRUE)
             ),
             pretty = list(list(n = 10), list(n = 4)),
+            control_axis = list(las = TRUE, cex.axis = 1.1),
             add = FALSE
           ),
         xlab = "", ylab = "",
         type = "n"
       )
     lines(axis_ls[[1]]$lim, c(1, 1), lty = 2)
-    elwd <- 1
+    elwd <- 1.5
     add_error_bars(outsim$id,
       outsim$ratio,
       lwr = outsim$lowerCI, upr = outsim$upperCI, lwd = elwd,
