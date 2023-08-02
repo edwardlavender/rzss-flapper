@@ -109,7 +109,7 @@ pretty_pairs(rates[, c(
 )])
 
 #### Define response variable
-resp <- "rr" # "hr"
+resp <- "hr" # "hr"
 rates$resp <- rates[, resp]
 rates_for_resp <- rates[, c(
   "event_id_int", "event_id",
@@ -216,11 +216,13 @@ mod <- mod_1
 # rr: delta AIC = 111.96
 
 #### Model summary
-summary(mod, digits = 3)
+s <- summary(mod, digits = 3)
 con <- paste0("./fig/", resp, "_coef.txt")
 sink(con)
-summary(mod, digits = 3)
+print(s)
 sink()
+s$p.table |> tidy_numbers(3) |> tidy_write(paste0("./fig/", resp, "_coef_parametric.txt"))
+s$s.table |> tidy_numbers(3) |> tidy_write(paste0("./fig/", resp, "_coef_smooth.txt"))
 
 
 #########################
