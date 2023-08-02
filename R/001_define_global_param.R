@@ -94,12 +94,12 @@ if (labs_check) {
 }
 ## Blood parameter limits
 ylims <- list(
-  pH = c(6.9, 7.8),
-  PCO2 = c(1, 10),
-  PO2 = c(0, 300),
+  pH = c(6.9, 8),
+  PCO2 = c(0, 10),
+  PO2 = c(0, 400),
   HCO3 = c(2, 10),
-  lac = c(0, 5),
-  glu = c(0.5, 3),
+  lac = c(-0.25, 5),
+  glu = c(0.25, 3),
   K = c(0, 12),
   Mg = c(0.7, 1.7)
 )
