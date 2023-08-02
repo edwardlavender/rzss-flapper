@@ -43,16 +43,16 @@ set.seed(1)
 #### Set up simulations
 
 #### Define blood sample ("1", "2", "3") and response variables
-sample <- "3"
+sample <- "1"
 if (sample == "1") {
   resps_for_bs <- paste0(resps, "_1")
 } else if (sample == "2") {
   resps_for_bs <- paste0(resps, "_2")
 } else if (sample == "3") {
   resps_for_bs <- paste0(resps, "_3")
-  } else {
+} else {
   stop("sample not correctly specified.")
-  }
+}
 resps_for_bs <- resps_for_bs[!(resps_for_bs %in% resps_exclude)]
 
 #### Define newdata skeleton
@@ -164,7 +164,8 @@ labels <- labels[names(comparisons)]
 #### Implement simulation
 
 #### Implement simulations
-# [with R = 1e3 simulations, this takes 1 min one one core]
+# [with R = 1e3 simulations, this takes 1 min on one core (sample 1)]
+# [with R = 1e5 simulations, this takes 140 min on one core (sample 1)]
 tic()
 overwrite <- FALSE
 file_sim <- paste0("./data/estimates/bloods_sims_", sample, ".rds")
@@ -286,7 +287,7 @@ stopifnot(!any(is.na(outsims$col)))
 #### Set up plot to save
 if (save) {
   height <- 8
-  width  <- 8
+  width  <- 9
   if (sample == "2") {
     height <- 6
   } else if (sample == "3") {
