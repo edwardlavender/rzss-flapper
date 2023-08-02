@@ -439,8 +439,8 @@ legend("topright",
        col = c("royalblue", "darkred"),
        lwd = c(1.5, 1.5),
        legend = c(
-         expression(E(T* ":" ~ FT[L])),
-         expression(E(T* ":" ~ FT[H]))
+         expression(E(FT* ":" ~ T[L])),
+         expression(E(FT* ":" ~ T[H]))
        ),
        adj = legend_adj,
        bg = scales::alpha("white", 0.5), box.lwd = 0.5, box.lty = 3,
