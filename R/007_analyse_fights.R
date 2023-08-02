@@ -111,7 +111,7 @@ pp <- par(mfrow = c(1, 2))
 plot(mod, 1:2)
 par(pp)
 if (save) dev.off()
-# plot(DHARMa::simulateResiduals(mod))
+# plot(DHARMa::simulateResiduals(mod, n = 1e3))
 
 #### Model predictions
 ## Graphical param
@@ -170,7 +170,7 @@ par(px)
 # axis(side = 1, col = "red"); axis(side = 2, col = "red")
 par(pp)
 if (save) dev.off()
-open("./fig/fight_time.png")
+# open("./fig/fight_time.png")
 
 
 #### End of code.
