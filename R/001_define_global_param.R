@@ -121,7 +121,7 @@ ylims_ratios <- list(
   HCO3 = c(0, 2.5),
   lac = c(0, 11),
   glu = c(0, 8),
-  K = c(0, 6),
+  K = c(0, 9),
   Mg = c(0.5, 2)
 )
 
