@@ -464,7 +464,7 @@ pretty_predictions_1d(
   ),
   add_xlab = list(text = xlabs[5:8], line = xlab_line),
   add_ylab = NULL,
-  add_main = list(text = c("E", "F", "G"), adj = main_adj, font = main_font),
+  add_main = list(text = c("E", "F", "G", "H"), adj = main_adj, font = main_font),
   one_page = FALSE
 )
 
