@@ -66,9 +66,9 @@ physio$vemco[physio$surgery == "Y"]
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
 yvar <- "pH"
-sample <- "1"
- lapply(resps, function(yvar) {
-   lapply(c("1", "2", "3"), function(sample) {
+sample <- "3"
+# lapply(resps, function(yvar) {
+#   lapply(c("1", "2", "3"), function(sample) {
 
 resp <- paste0(yvar, "_", sample)
 
@@ -224,7 +224,7 @@ constants <-
              time_from_surface_to_bs1     = median(physio$time_from_surface_to_bs1, na.rm = TRUE), 
              time_from_surface_to_bs2     = median(physio$time_from_surface_to_bs2, na.rm = TRUE), 
              time_from_bs1_to_bs2         = median(physio$time_from_bs1_to_bs2, na.rm = TRUE), 
-             surgery                      = factor("Y", levels = c("N", "Y")), 
+             surgery                      = factor("N", levels = c("N", "Y")), 
              gaff                         = factor("N", levels = c("N", "F")), 
              time_index                   = 1)
 saveRDS(constants, here_data("helper", "constants.rds"))
@@ -668,10 +668,13 @@ if (!inherits(coefs$D, "character")) {
 }
 ## BS1
 # min  mean median   max    sd  IQR  MAD
-# 10.06 41.79  42.03 66.33 17.85 20.7 21.8
+# 1 10.06 41.79  42.03 66.33 18.93 20.7 21.8
 ## BS2
-# min  mean median   max    sd   IQR   MAD
-# 25.84 37.55  35.57 51.39 9.66 17.2 11.44
+# min  mean median   max   sd   IQR   MAD
+# 26.27 38.42  37.98 50.42 9.57 14.22 12.03
+## Change
+# min mean median  max   sd  IQR MAD
+# 1 17.88 31.5  34.52 39.1 9.41 7.54 4.5
 
 ### Visual examination of coefs
 # Add p-value stars to facilitate visual checking
@@ -680,8 +683,8 @@ coefs$star[as.numeric(coefs$`p-value`) <= 0.05] <- "*"
 # View(coefs)
 
 
-  })
-})
+#  })
+#})
 
 
 
