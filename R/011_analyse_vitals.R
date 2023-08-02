@@ -72,6 +72,9 @@ rates <- rates[rates$time_from_deck_to_obs > 0, ]
 utils.add::basic_stats(rates$time_from_surface_to_deck)
 utils.add::basic_stats(rates$time_from_deck_to_obs)
 
+#### Fix erroneous observations
+rates$rr[which(rates$rr == 0)] <- NA
+
 
 #########################
 #########################
