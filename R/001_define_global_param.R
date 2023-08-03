@@ -53,7 +53,7 @@ ylabs <- list(
   Mg = expression(Mg^"2+" ~ "[mmol" * L^-1 * "]")
 )
 ylabs_3 <- list(
-  pH = "pH",
+  pH = expression(Delta * "pH"),
   PCO2 = expression(Delta * PCO[2] ~ "[mmHg]"),
   PO2 = expression(Delta * PO[2] ~ "[mmHg]"),
   HCO3 = expression(Delta * HCO[3]^" -" ~ "[mmol" * L^-1 * "]"),
