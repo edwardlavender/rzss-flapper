@@ -26,6 +26,26 @@ str_strip <- function(x, collapse = "_", ext = "") {
   x
 }
 
+#' @title Test if an interval overlaps 0
+overlaps_zero <- function(x) {
+  stopifnot(inherits(x, "matrix"))
+  stopifnot(!any(is.na(x)))
+  overlap <- rep(NA, nrow(x))
+  for (i in seq_len(nrow(x))) {
+    z <- x[i, ]
+    overlap[i] <- min(z) <= 0 && max(z) >= 0
+  }
+  overlap
+}
+
+#' @examples
+if (FALSE) {
+  m <- cbind(c(-1, 1, 2, -0.1), c(1, 2, 2.1, -0.01))
+  data.frame(m, overlaps_zero(m))
+}
+
+  
+
 
 ###########################
 ###########################
