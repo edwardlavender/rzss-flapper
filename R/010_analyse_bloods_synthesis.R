@@ -28,6 +28,7 @@ library(tictoc)
 
 #### Load data
 source(here_r("001_define_global_param.R"))
+source(here_r("002_define_helpers.R"))
 physio <- readRDS("./data/skate/physio.rds")
 
 #### Define param
@@ -43,7 +44,7 @@ set.seed(1)
 #### Set up simulations
 
 #### Define blood sample ("1", "2", "3") and response variables
-sample <- "1"
+sample <- "3"
 if (sample == "1") {
   resps_for_bs <- paste0(resps, "_1")
 } else if (sample == "2") {
@@ -164,13 +165,15 @@ labels <- labels[names(comparisons)]
 #### Implement simulation
 
 #### Implement simulations
-# [with R = 1e3 simulations, this takes 1 min on one core (sample 1)]
-# [with R = 1e5 simulations, this takes 140 min on one core (sample 1)]
+# * R = 1e3 simulations, ~1 min
+# * R = 5e3, ~6 min (sample 1), ~20 min (sample 2), ~21 min (sample 3)
+# * R = 1e4, ~X min (sample 1), ~Y min (sample 2), ~3.2 hr (sample 3)
+# * R = 1e5 simulations, this takes 140 min on one core (sample 1, sample 2 > 12 hours)]
 tic()
 overwrite <- FALSE
 file_sim <- paste0("./data/estimates/bloods_sims_", sample, ".rds")
 if (overwrite | !file.exists(file_sim)) {
-  R <- 1e3
+  R <- 5e3
   outsims <-
     pbapply::pblapply(resps_for_bs, cl = NULL, function(resp) {
       
@@ -199,6 +202,7 @@ if (overwrite | !file.exists(file_sim)) {
           # ... implement bootstrapping. In the sampling procedure,
           # ... observations are dropped and the model can't fit
           # ... because gaffing has only one factor level.
+          set.seed(1)
           success <- FALSE
           count   <- 0
           while (!success & count < 500) {
@@ -226,17 +230,25 @@ if (overwrite | !file.exists(file_sim)) {
             out <- data.frame(
               comparison = names(comparisons)[i],
               resp = resp,
+              est1 = ratio$estimate[1],
+              est1_lowerCI = ratio$estimate_conf.low[1], 
+              est1_upperCI = ratio$estimate_conf.high[1],
               ratio = ratio$ratio[2],
               lowerCI = ratio$ratio_conf.low[2],
-              upperCI = ratio$ratio_conf.high[2]
+              upperCI = ratio$ratio_conf.high[2], 
+              count = count, 
+              n = nrow(model.frame(mod))
             )
           } else {
             out <- data.frame(
               comparison = names(comparisons)[i],
               resp = resp,
+              est1 = NA,
               ratio = NA,
               lowerCI = NA,
-              upperCI = NA
+              upperCI = NA, 
+              count = count, 
+              n = nrow(model.frame(mod))
             )
           }
           # print("ok")
@@ -251,6 +263,10 @@ if (overwrite | !file.exists(file_sim)) {
   outsims <- readRDS(file_sim)
 }
 toc()
+
+#### Handle warnings
+# Warning messages:
+#   1: glm.fit: algorithm did not converge 
 
 
 #########################
@@ -331,6 +347,20 @@ lapply(1:length(outsims_by_resps), function(i) {
         xlab = "", ylab = "",
         type = "n"
       )
+    if (sample == "3") {
+      outsim$pch <- (outsim$est1 > 0)
+      outsim$sig <- overlaps_zero(cbind(outsim$est1_lowerCI, outsim$est1_upperCI))
+      outsim$sig <- ifelse(outsim$sig, yes = "", no = "*")
+      p_pos <- which(outsim$pch)
+      p_neg <- which(!outsim$pch)
+      outsim$pch[p_pos] <- "+"
+      outsim$pch[p_neg] <- "-"
+      outsim$pch <- paste0(outsim$pch, outsim$sig)
+      print(head(outsim))
+      text(x = as.integer(outsim$comparison), 
+           y = rep(axis_ls[[2]]$lim[2], nrow(outsim)), 
+           labels = outsim$pch)
+    }
     lines(axis_ls[[1]]$lim, c(1, 1), lty = 2)
     elwd <- 1.5
     add_error_bars(outsim$id,
