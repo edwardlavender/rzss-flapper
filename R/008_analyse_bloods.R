@@ -65,11 +65,12 @@ physio$vemco[physio$surgery == "Y"]
 
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
-yvar <- "pH"
-sample <- "2"
-lapply(resps, function(yvar) {
-   lapply(c("1", "2", "3"), function(sample) {
+yvar <- "PO2"
+sample <- "3"
+# lapply(resps, function(yvar) {
+#    lapply(c("1", "2", "3"), function(sample) {
 
+message(paste(yvar, sample))
 resp <- paste0(yvar, "_", sample)
 
 #### Focus on specific columns
@@ -440,18 +441,40 @@ legend(legend_pos,
        y.intersp = 1.2
 )
 
-## Plot predictions for handling time, gaff and surgery
+## Plot predictions for handling time 
+# This is plotted separately to enforce consistent x limits
+# (which is not necessary for other variables)
 x_var_time <- colnames(physio_in_mod)[
   stringr::str_detect(colnames(physio_in_mod), "time_from_surface")]
+if (sample %in% c(1, 2)) {
+  xlim_handling <- c(0, 40)
+} else {
+  xlim_handling <- c(0, 25)
+}
+pretty_predictions_1d(
+  model = mod,
+  x_var = x_var_time,
+  constants = constants,
+  pretty_axis_args = list(pretty = list(n = 4)),
+  xlim = xlim_handling,
+  ylim = ylim,
+  add_error_envelope = eenv_param,
+  add_points = pt_param,
+  add_xlab = list(text = xlabs[5], line = xlab_line),
+  add_ylab = NULL,
+  add_main = list(text = "E", adj = main_adj, font = main_font),
+  one_page = FALSE
+)
+
+## Plot predictions for time from BS1 to BS2 (if applicable) gaff and surgery
 add_order <- 
   setNames(list(c("predictions", "points"), 
-                c("predictions", "points"),
                 c("points", "predictions"), 
                 c("points", "predictions")), 
-           c(x_var_time, "time_from_bs1_to_bs2", "gaff", "surgery"))
-x_var <- c(x_var_time, "time_from_bs1_to_bs2", "gaff", "surgery")
+           c("time_from_bs1_to_bs2", "gaff", "surgery"))
+x_var <- c("time_from_bs1_to_bs2", "gaff", "surgery")
 x_var <- x_var[x_var %in% all.vars(form_1)]
-pos <- 5:(5 + length(x_var) - 1)
+pos <- 6:(6 + length(x_var) - 1)
 x_var <- setNames(x_var, LETTERS[pos])
 pretty_predictions_1d(
   model = mod,
@@ -684,8 +707,8 @@ coefs$star[as.numeric(coefs$`p-value`) <= 0.05] <- "*"
 # View(coefs)
 
 
-  })
-})
+#  })
+# })
 
 
 
