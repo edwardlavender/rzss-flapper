@@ -105,10 +105,13 @@ ylims <- list(
 )
 ylims_3 <- list(
   pH = c(-0.4, 0.4),
+  PO2 = c(-150, 150),
   PCO2 = c(-6, 5),
   HCO3 = c(-3, 1.5),
   lac =  c(-2, 3),
-  glu = c(-1, 1)
+  glu = c(-1, 1), 
+  K = c(-10, 10), 
+  Mg = c(-1, 1)
 )
 ## Excludes
 resps_exclude <- c("K_2", "Mg_2", "PCO2_3", "PO2_3", "K_3", "Mg_3")
