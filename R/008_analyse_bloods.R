@@ -66,9 +66,9 @@ physio$vemco[physio$surgery == "Y"]
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
 yvar <- "pH"
-sample <- "1"
-# lapply(resps, function(yvar) {
-#   lapply(c("1", "2", "3"), function(sample) {
+sample <- "2"
+lapply(resps, function(yvar) {
+   lapply(c("1", "2", "3"), function(sample) {
 
 resp <- paste0(yvar, "_", sample)
 
@@ -458,6 +458,7 @@ pretty_predictions_1d(
   x_var = x_var,
   constants = constants,
   add_order = add_order,
+  pretty_axis_args = list(pretty = list(n = 4)),
   ylim = ylim,
   add_error_bars = ebars_param,
   add_error_envelope = eenv_param,
@@ -683,8 +684,8 @@ coefs$star[as.numeric(coefs$`p-value`) <= 0.05] <- "*"
 # View(coefs)
 
 
-#  })
-#})
+  })
+})
 
 
 
