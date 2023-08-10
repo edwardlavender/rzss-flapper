@@ -66,7 +66,7 @@ physio$vemco[physio$surgery == "Y"]
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
 yvar <- "pH"
-sample <- "3"
+sample <- "1"
 # lapply(resps, function(yvar) {
 #   lapply(c("1", "2", "3"), function(sample) {
 
@@ -442,7 +442,7 @@ legend(legend_pos,
 
 ## Plot predictions for handling time, gaff and surgery
 x_var_time <- colnames(physio_in_mod)[
-  stringr::str_detect(colnames(physio_in_mod), "time_from_capture")]
+  stringr::str_detect(colnames(physio_in_mod), "time_from_surface")]
 add_order <- 
   setNames(list(c("predictions", "points"), 
                 c("predictions", "points"),
