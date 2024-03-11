@@ -47,6 +47,18 @@ set.seed(1)
 #########################
 #### Data processing
 
+#### Number of observations 
+rates |> 
+  filter(!is.na(rr)) |> 
+  group_by(event_id) |> 
+  slice(1L) |> 
+  nrow()
+rates |> 
+  filter(!is.na(hr)) |> 
+  group_by(event_id) |> 
+  slice(1L) |> 
+  nrow()
+
 #### Order by time stamp
 rates$event_id_int <- rates$event_id
 rates$event_id <- factor(rates$event_id)
