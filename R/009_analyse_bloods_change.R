@@ -89,26 +89,28 @@ obs_by_param <-
       pretty_axis_args = list(side = 1:2, axis = list(list(labels = FALSE), list(NULL)), control_digits = 1)
     )
     # Add observed data (jittered horizontally)
-    dat$j <- as.integer(dat$x)
-    dat$j <- runif(nrow(dat), dat$j - 0.1, dat$j + 0.1)
-    pt_param <- list(
-      pch = 21,
-      col = scales::alpha("green4", 0.5),
-      bg = scales::alpha("green4", 0.5),
-      cex = 0.5,
-      lwd = 0.75
-    )
-    pt_param$x <- dat$j
-    pt_param$y <- dat$y
-    do.call(points, pt_param)
-    # Add mean values
-    points(1:4,
-      dat |>
-        dplyr::group_by(x) |>
-        dplyr::summarise(z = mean(y)) |>
-        dplyr::pull(z),
-      pch = 3, lwd = 2
-    )
+    if (FALSE) {
+      dat$j <- as.integer(dat$x)
+      dat$j <- runif(nrow(dat), dat$j - 0.1, dat$j + 0.1)
+      pt_param <- list(
+        pch = 21,
+        col = scales::alpha("green4", 0.5),
+        bg = scales::alpha("green4", 0.5),
+        cex = 0.5,
+        lwd = 0.75
+      )
+      pt_param$x <- dat$j
+      pt_param$y <- dat$y
+      do.call(points, pt_param)
+      # Add mean values
+      points(1:4,
+             dat |>
+               dplyr::group_by(x) |>
+               dplyr::summarise(z = mean(y)) |>
+               dplyr::pull(z),
+             pch = 3, lwd = 2
+      )
+    }
     # Add a line at BS1
     lines(c(0.5, 4.5), rep(median(dat$y[dat$x == "BS1"]), 2), col = "red2", lty = 3, lwd = 1.5)
     # Add axes/labels
