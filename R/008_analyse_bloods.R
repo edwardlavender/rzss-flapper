@@ -59,6 +59,26 @@ utils.add::basic_stats(physio$time_from_surface_to_deck)
 # Choose whether or not to include individuals with uncertain parameters
 # ... for the responses (e.g., associated with <) or explanatory variables (e.g., gaffing)
 physio <- physio[physio$healthy == 1, ]
+# Number of individuals with any data 
+# * 52 individuals with a blood sample (53 capture events)
+physio$bs1 <- rowSums(!is.na(physio[paste0(resps, "_1")])) > 0
+physio$bs2 <- rowSums(!is.na(physio[paste0(resps, "_2")])) > 0
+table(physio$bs1 | physio$bs2)
+length(unique(physio$pit))
+# * 51 blood sample at BS1
+table(physio$bs1)
+# * 46 individuals with a blood sample at BS2
+table(physio$bs2)
+# * Two individuals with only BS2
+# * (Neither of these are the individual that was caught twice: 29241467)
+physio[!physio$bs1 & physio$bs2, ]
+# Number of individuals with data for each BS1 and BS2 variable
+sapply(paste0(resps, "_1"), function(resp) {
+  table(is.na(physio[[resp]]))
+})
+sapply(paste0(resps, "_2"), function(resp) {
+  table(is.na(physio[[resp]]))
+})
 # Distinguish tagged/non tagged individuals for BS2 models
 physio$vemco[physio$surgery == "N"]
 physio$vemco[physio$surgery == "Y"]
