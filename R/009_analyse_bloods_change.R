@@ -42,11 +42,11 @@ set.seed(1)
 #### Loop over each response and make plots
 if (save) {
   png("./fig/blood_sample_change.png",
-    height = 6, width = 10, units = "in", res = 800
+    height = 8, width = 6, units = "in", res = 800
   )
 }
 pp <- par(
-  mfrow = par_mf(length(resps)),
+  mfrow = c(4, 2),
   oma = c(4, 4, 2, 2), mar = c(2, 2, 2, 2)
 )
 prompt <- FALSE # TRUE
