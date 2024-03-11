@@ -191,7 +191,8 @@ fights$event_id <- fights$sheet_index
 # fights$event_id    <- 1:nrow(fights)
 # identical(fights$event_id, fights$sheet_index) # TRUE
 table(is.na(fights$time_fight))
-utils.add::basic_stats(fights$time_fight)
+table(fights$healthy)
+utils.add::basic_stats(fights$time_fight[fights$healthy == 1])
 
 #### Process PIT tag IDs
 ## Compare pit IDs in fights versus 'physio' by matching the last four digits
