@@ -366,7 +366,7 @@ lapply(1:length(outsims_by_resps), function(i) {
     add_error_bars(outsim$id,
       outsim$ratio,
       lwr = outsim$lowerCI, upr = outsim$upperCI, lwd = elwd,
-      add_fit = list(pch = "-", col = outsim$col, lwd = elwd),
+      add_fit = list(pch = 21, col = outsim$col, bg = outsim$col, cex = 0.75),
       col = outsim$col
     )
     axis_ls[[1]]$axis$labels <- labels
