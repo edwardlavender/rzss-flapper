@@ -10,6 +10,7 @@ Dodd<sup>8</sup>, James Thorburn<sup>3,9,10</sup>
 state but is no longer being actively developed; support/maintenance
 will be provided as time
 allows.](https://www.repostatus.org/badges/latest/inactive.svg)](https://www.repostatus.org/#inactive)
+[![DOI](https://zenodo.org/badge/258165513.svg)](https://zenodo.org/doi/10.5281/zenodo.10827243)
 
 <sup>1</sup> Royal Zoological Society of Scotland, UK  
 <sup>2</sup> Centre for Research into Ecological and Environmental
