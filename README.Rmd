@@ -1,22 +1,27 @@
 ---
-title: "Physiological responses to capture and handling in flapper skate (_Dipturus intermedius_)"
-author: Georgina C. Cole^1^, Edward Lavender^2,3\*^, Steffen J. Oppel^4^, Adam Naylor^1^, Simon J. Girling^1^, Jane Dodd^5^, James Thorburn^3^
+title: "Physiological responses to capture, handling and tagging in flapper skate (_Dipturus intermedius_)"
+author: Georgina C. Cole^1^, Edward Lavender^2,3,4\*^, Adam Naylor^1,5^,  Simon J. Girling^1^, Dmitry Aleynik^6^, Steffen J. Oppel^7^, Jane Dodd^8^, James Thorburn^3,9,10^
 output: github_document
 ---
 
 [![Project Status: Inactive – The project has reached a stable, usable state but is no longer being actively developed; support/maintenance will be provided as time allows.](https://www.repostatus.org/badges/latest/inactive.svg)](https://www.repostatus.org/#inactive)
 
-^1^ Royal Zoological Society of Scotland, RZSS Edinburgh Zoo, Scotland  
-^2^ Centre for Research into Ecological and Environmental Modelling, University of St Andrews, Scotland  
-^3^ Scottish Oceans Institute, University of St Andrews, Scotland  
-^4^ Swiss Ornithological Institute, Sempach, Switzerland  
-^5^ NatureScot, Oban, Scotland
+^1^ Royal Zoological Society of Scotland, UK  
+^2^ Centre for Research into Ecological and Environmental Modelling, University of St Andrews, UK  
+^3^ Scottish Oceans Institute, University of St Andrews, UK  
+^4^ Department of Systems Analysis, Integrated Assessment and Modelling, Eawag, Swiss Federal Institute of Aquatic Science and Technology, Switzerland  
+^5^ New Zealand Centre for Conservation Medicine, Auckland Zoo, New Zealand  
+^6^ Scottish Association for Marine Science, UK  
+^7^ Swiss Ornithological Institute, Switzerland  
+^8^ Nature Scot, UK  
+^9^ School of Applied Sciences, Edinburgh Napier University, UK  
+^10^ Centre for Conservation and Restoration Science, Edinburgh Napier University, UK  
 
-^\*^ This repository is maintained by Edward Lavender (<el72@st-andrews.ac.uk>).
+^\*^ This repository is maintained by Edward Lavender (<edward.lavender@eawag.ch>).
 
 # Introduction
 
-This repository contains methods, written in [R](https://www.r-project.org/) and organised as an [RStudio](https://www.rstudio.com/) [Project](https://r4ds.had.co.nz/workflow-projects.html) for Cole et al. (in prep). Physiological responses to capture and handling in flapper skate (*Dipturus intermedius*).
+This repository contains methods, written in [R](https://www.r-project.org/) and organised as an [RStudio](https://www.rstudio.com/) [Project](https://r4ds.had.co.nz/workflow-projects.html) for Cole et al. (in prep). Physiological responses to capture, handling and tagging in flapper skate (*Dipturus intermedius*).
 
 We studied the physiological responses of flapper skate following catch-and-release angling and acoustic tagging in the Loch Sunart to the Sound of Jura Marine Protected Area on the west coast of Scotland (Figure 1). We recorded capture fight times and blood parameters following capture (blood sample one: BS1) and following handling (blood sample two: BS2). Using statistical modelling (as recorded in this repository) we investigated capture fights and relationships between blood parameters (for both BS1 and BS2) and aspects of the capture and handing process (such as fight time), individual characteristics (such as sex) and environmental conditions (such as temperature). This work was conducted as part of the Movement Ecology of Flapper Skate project. 
 
@@ -43,18 +48,18 @@ The project follows a standardised structure encouraged by the [`dv`](https://gi
           - `Skate data analysis shared.xlsx` summarises capture events and blood parameters in one place. (This document was collated by G. C. Cole.) The `Data all without formulas` sheet includes capture events, raw blood parameters and temperature-corrected blood parameter values. This sheet is used for the blood parameter analyses in this project. 
       - `spatial/` contains spatial data:
           - `coast/` contains coastline data for the region, sourced from the [Database of Global Administrative Areas](https://biogeo.ucdavis.edu/data/gadm3.6/Rsp/gadm36_GBR_0_sp.rds); 
-          - `mesh/` contains mesh files for the West Scotland Coastal Ocean Modelling System (WeStCOMS), sourced from [Dmitry Aleynik](https://www.sams.ac.uk/people/researchers/aleynik-dr-dmitry/) at the Scottish Association for Marine Science (SAMS). These files are also available from the [SAMS Thredds Server](https://www.sams.ac.uk/facilities/thredds/); <br/>
+          - `mesh/` contains mesh files for the West Scotland Coastal Ocean Modelling System (WeStCOMS), sourced from [Dmitry Aleynik](https://www.sams.ac.uk/people/researchers/aleynik-dr-dmitry/) at the Scottish Association for Marine Science (SAMS). These files are also available from the [SAMS Thredds Server](https://www.sams.ac.uk/facilities/thredds/); 
       
 2.  **`data/`** contains processed data and results:
 
       - `skate/` contains processed skate data:
-          - `physio.rds` contains processed blood physiology data from `process_bloods.R` (see below). 
-          - `vital.rds` contains processed vital signs data from `process_vitals.R` (see below). 
-          - `fights.rds` contains processed capture fights data from `process_fights.R` (see below). 
+          - `physio.rds` contains processed blood physiology data from `process_bloods.R`;
+          - `vital.rds` contains processed vital signs data from `process_vitals.R`;
+          - `fights.rds` contains processed capture fights data from `process_fights.R`;
       - `spatial/` contains processed spatial data:
           - `bathy/` contains one arc-second bathymetry data from [Digimap](https://digimap.edina.ac.uk) (higher resolution data from the [Ireland, Northern Ireland and Scotland Hydrographic surveys](https://doi.org/10.1017/S1755691015000146) are not available for all sampled locations);
-          - `coast/` contains processed coastline data from `process_spatial.R` (see below);
-          - `mesh/` contains processed WeStCOMS mesh files from `process_spatial.R` (see below); 
+          - `coast/` contains processed coastline data from `process_spatial.R`;
+          - `mesh/` contains processed WeStCOMS mesh files from `process_spatial.R`; 
       - `estimates/` contains model outputs from `analyse_*.R` scripts; 
       -   `inst/` contains [RStudio](https://www.rstudio.com/) [Project](https://r4ds.had.co.nz/workflow-projects.html)-management files generated by [`dv`](https://github.com/edwardlavender/dv):
           -   `tree.rds` is a record of the project directory tree (as generated by `dv::use_template_tree()` in `dev/01-dev.R`, see below); <br/>
@@ -104,6 +109,6 @@ Follow the steps described below to clone the project and reproduce the workflow
 
 # Citation
 
-Cole et al. (in prep). Physiological responses to capture and handling in flapper skate (*Dipturus intermedius*).
+Cole et al. (in prep). Physiological responses to capture, handling and tagging in flapper skate (*Dipturus intermedius*).
 
 ---
