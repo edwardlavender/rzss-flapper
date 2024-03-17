@@ -1,0 +1,22 @@
+cff-version: 1.1.0
+authors:
+- family-names: Cole
+  given-names: Georgina C.
+- family-names: Lavender
+  given-names: Edward
+  orcid: https://orcid.org/0000-0002-8040-7489
+- family-names: Naylor
+  given-names: Adam
+- family-names: Girling
+  given-names: Simon J.
+- family-names: Aleynik
+  given-names: Dmitry
+- family-names: Oppel
+  given-names: Steffen J.
+- family-names: Dodd
+  given-names: Jane
+- family-names: Thorburn
+  given-names: James
+version: v.0.0.9000
+date-released: 2024-03-17
+title: "edwardlavender/rzss-flapper: physiological responses to capture, handling and tagging in flapper skate (_Dipturus intermedius_)"
