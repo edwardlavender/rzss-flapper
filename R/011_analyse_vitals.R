@@ -124,7 +124,7 @@ pretty_pairs(rates[, c(
 )])
 
 #### Define response variable
-resp <- "hr" # "hr"
+resp <- "rr" # "hr"
 rates$resp <- rates[, resp]
 rates_for_resp <- rates[, c(
   "event_id_int", "event_id",
@@ -318,8 +318,8 @@ main_font <- 2
 jt <- 0.2
 pt_cex_adj <- 0.5
 pt_param$cex <- 1
-pt_param$col <- pt_cols_id$col[findInterval(as.integer(model.frame(mod)$event_id), pt_cols_id$breaks)]
-pt_param$bg  <- pt_param$col
+# pt_param$col <- "black" # pt_cols_id$col[findInterval(as.integer(model.frame(mod)$event_id), pt_cols_id$breaks)]
+# pt_param$bg  <- pt_param$col
 stopifnot(!any(is.na(pt_param$col)))
 # Adjust error bar parameters
 ebars_param$lwd <- 2.5
