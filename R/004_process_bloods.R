@@ -58,6 +58,7 @@ physio$gaff <- stringr::str_replace_all(physio$gaff, "\\?", "")
 
 #### Select columns
 # (The list of response variables is defined in define_global_param.R)
+sort(colnames(physio))
 physio <-
   physio |>
   dplyr::select(
@@ -83,20 +84,26 @@ physio <-
     healthy = healthy,
     ## blood responses (with elasmobranch-specific temperature adjustments ) for BS1 and BS2
     # pH
+    pH_1_raw = ph1,
+    pH_2_raw = ph_2,
     pH_1 = ph1_tc_b,
     pH_2 = ph2_tc_b,
-    # pCO2
+    # PCO2
+    PCO2_1_raw = pc02_1,
+    PCO2_2_raw = pc02_2,
     PCO2_1 = pc02_1_tc,
     PCO2_2 = pc02_2_tc,
-    # pO2
+    # PO2
+    PO2_1_raw = p02_1,
+    PO2_2_raw = p02_2,
     PO2_1 = p02_1_tc,
     PO2_2 = p02_2_tc,
     # BE
     # be_1 = be_1,
     # be_2 = be_2,
     # HCO3
-    HCO3_1 = hco3_1_tc,
-    HCO3_2 = hc03_2_tc,
+    HCO3_1 = hco3_1_tc_b, 
+    HCO3_2 = hco3_2_tc_b, 
     # SO2
     # SO2_1 = s02_1,
     # SO2_2 = s02_2,
@@ -123,6 +130,7 @@ physio <-
 ## Some variables are recorded with '<'
 # physio$be_1 <- stringr::str_replace_all(physio$be_1, "<", NA_character_)
 # physio$be_2 <- stringr::str_replace_all(physio$be_2, "<", NA_character_)
+physio$PCO2_2_raw[physio$PCO2_2_raw == "<5"] <- NA_character_
 ## Check for any ? or < symbols
 for (i in 1:ncol(physio)) {
   # print(i)
@@ -186,6 +194,20 @@ physio$HCO3_1[physio$pit == 7093028]
 # ... is less than the reading value of the machine
 # ... This has already been set to NA in the raw data.
 physio$PCO2_2[physio$pit == "10991061"]
+
+#### Validate blood parameter calculations
+# pH
+tc_valid(physio$pH_1, tc_pH(physio$pH_1_raw, physio$temp_water)) 
+tc_valid(physio$pH_2, tc_pH(physio$pH_2_raw, physio$temp_water)) 
+# PO2
+tc_valid(physio$PO2_1, tc_PO2(physio$PO2_1_raw, physio$temp_water)) 
+tc_valid(physio$PO2_2, tc_PO2(physio$PO2_2_raw, physio$temp_water)) 
+# PCO2
+tc_valid(physio$PCO2_1, tc_PCO2(physio$PCO2_1_raw, physio$temp_water)) 
+tc_valid(physio$PCO2_2, tc_PCO2(physio$PCO2_2_raw, physio$temp_water)) 
+# HCO3
+tc_valid(physio$HCO3_1, tc_HCO3(physio$pH_1, physio$PCO2_1, physio$temp_water)) 
+tc_valid(physio$HCO3_2, tc_HCO3(physio$pH_2, physio$PCO2_2, physio$temp_water)) 
 
 #### Define difference between blood parameters
 # ... The 'difference' variable is labelled using sample = '3'
