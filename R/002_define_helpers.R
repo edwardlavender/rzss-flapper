@@ -71,6 +71,47 @@ get_time <- function(rates_raw, stage = "Time on hook") {
   chron::times(as.numeric(time))
 }
 
+#' @title Blood parameter corrections
+
+tc_pH <- function(m, t) {
+  0.011 * (37 - t) + m 
+}
+
+tc_PO2 <- function(m, t){
+  10^(-0.0058 * (37 - t)) * m
+}
+
+tc_PCO2 <- function(m, t) {
+  10^(-0.019 * (37 - t)) * m
+}
+
+tc_HCO3 <- function(pH, PCO2, t) {
+  
+  alpha_CO2 <- 
+    0.1131 - 
+    1.3847 * 10^-2 * t +
+    1.4995 * 10^-3 * t^2 - 
+    8.8008 * 10^-5 * t^3  + 
+    2.4998 * 10^-6 * t^4  - 
+    2.7369 * 10^-8 * t^5 
+  
+  pKa <- 6.4996 + log10(t) * (0.3648 - 0.0521 * pH) - 0.0353 * pH - 0.0074 * t
+  
+  alpha_CO2 * PCO2 * 10^(pH - pKa)
+  
+}
+
+tc_valid <- function(a, b) {
+  d <- data.frame(a = a, b = b)
+  print(d)
+  d <- d[complete.cases(d), ]
+  stopifnot(isTRUE(all.equal(d$a, d$b)))
+  if (!isTRUE(all.equal(a, b))) {
+    warning("NA mismatch!", call. = FALSE)
+  }
+  invisible(NULL)
+}
+
 
 ###########################
 ###########################
