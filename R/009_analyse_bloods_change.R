@@ -39,6 +39,9 @@ set.seed(1)
 #########################
 #### Plot BS1 and BS2
 
+#### Focus on healthy individuals
+physio <- physio[physio$healthy == 1L, ]
+
 #### Loop over each response and make plots
 if (save) {
   png("./fig/blood_sample_change.png",
@@ -132,6 +135,12 @@ if (save) dev.off()
 #########################
 #########################
 #### Summarise % change during handling
+
+#### Quick summaries
+utils.add::basic_stats(physio$lac_1, na.rm = TRUE)
+utils.add::basic_stats(physio$lac_2, na.rm = TRUE)
+utils.add::basic_stats(physio$pH_1, na.rm = TRUE)
+utils.add::basic_stats(physio$pH_2, na.rm = TRUE)
 
 #### Calculate % change in median values of each parameter during handling
 obs_by_param |>
