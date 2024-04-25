@@ -31,8 +31,8 @@ titles <- list(
   HCO3 = expression(bold("D") ~ "(" * HCO[3]^" -" * ")"),
   lac = expression(bold("E") ~ "(" * "Lac" * ")"),
   glu = expression(bold("F") ~ "(" * "Glu" * ")"),
-  K = expression(bold("G") ~ "(" * K^"+" * ")"),
-  Mg = expression(bold("H") ~ "(" * Mg^"2+" * ")")
+  K = expression(bold("G") ~ "(" * K * ")"),
+  Mg = expression(bold("H") ~ "(" * Mg * ")")
 )
 # Titles for simulation-based analysis of changes 
 titles_3 <- list(
@@ -49,8 +49,8 @@ ylabs <- list(
   HCO3 = expression(HCO[3]^" -" ~ "[mmol" * L^-1 * "]"),
   lac = expression("Lac [mmol" * L^-1 * "]"),
   glu = expression("Glu [mmol" * L^-1 * "]"),
-  K = expression(K^"+" ~ "[mmol" * L^-1 * "]"),
-  Mg = expression(Mg^"2+" ~ "[mmol" * L^-1 * "]")
+  K = expression(K ~ "[mmol" * L^-1 * "]"),
+  Mg = expression(Mg ~ "[mmol" * L^-1 * "]")
 )
 ylabs_3 <- list(
   pH = expression(Delta * "pH"),
@@ -59,8 +59,8 @@ ylabs_3 <- list(
   HCO3 = expression(Delta * HCO[3]^" -" ~ "[mmol" * L^-1 * "]"),
   lac = expression(Delta * "Lac [mmol" * L^-1 * "]"),
   glu = expression(Delta * "Glu [mmol" * L^-1 * "]"),
-  K = expression(Delta * K^"+" ~ "[mmol" * L^-1 * "]"),
-  Mg = expression(Delta * Mg^"2+" ~ "[mmol" * L^-1 * "]")
+  K = expression(Delta * K ~ "[mmol" * L^-1 * "]"),
+  Mg = expression(Delta * Mg ~ "[mmol" * L^-1 * "]")
 )
 ## Define legend labels
 ylabs_legend <- c(
@@ -70,8 +70,8 @@ ylabs_legend <- c(
   expression(HCO[3]^" -"),
   expression("Lac"),
   expression("Glu"),
-  expression(K^"+"),
-  expression(Mg^"2+")
+  expression(K),
+  expression(Mg)
 )
 ## Check all labels
 # Check ylabs
@@ -97,7 +97,7 @@ ylims <- list(
   pH = c(6.9, 8),
   PCO2 = c(0, 10),
   PO2 = c(0, 400),
-  HCO3 = c(2, 10),
+  HCO3 = c(1.5, 10),
   lac = c(-0.25, 5),
   glu = c(0.25, 3),
   K = c(0, 12),
