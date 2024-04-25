@@ -44,7 +44,7 @@ set.seed(1)
 #### Set up simulations
 
 #### Define blood sample ("1", "2", "3") and response variables
-sample <- "3"
+sample <- "1"
 if (sample == "1") {
   resps_for_bs <- paste0(resps, "_1")
 } else if (sample == "2") {
@@ -166,7 +166,7 @@ labels <- labels[names(comparisons)]
 
 #### Implement simulations
 # * R = 1e3 simulations, ~1 min
-# * R = 5e3, ~6 min (sample 1), ~20 min (sample 2), ~21 min (sample 3)
+# * R = 5e3, ~6 min (sample 1), ~20 min (sample 2), ~22 min (sample 3)
 # * R = 1e4, ~X min (sample 1), ~Y min (sample 2), ~3.2 hr (sample 3)
 # * R = 1e5 simulations, this takes 140 min on one core (sample 1, sample 2 > 12 hours)]
 tic()
