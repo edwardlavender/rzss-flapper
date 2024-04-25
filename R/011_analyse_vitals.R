@@ -131,7 +131,7 @@ if (FALSE) {
 }
 
 #### Define response variable
-resp <- "rr" # "hr"
+resp <- "hr" # "hr"
 rates$resp <- rates[, resp]
 rates_for_resp <- rates[, c(
   "event_id_int", "event_id",
@@ -175,6 +175,12 @@ rates_for_resp |>
 # For both variables, 78 % of events are uniquely defined by their size
 
 #### Period of observations
+# Number of observations during time on deck
+rates_for_resp |> 
+  group_by(event_id) |>
+  summarise(n = n()) |>
+  pull(n) |> 
+  sort()
 # There are only few observations after more than 20 minutes
 hist(rates$time_from_deck_to_obs)
 # Examine evidence for change during handling
