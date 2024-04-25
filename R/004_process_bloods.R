@@ -208,7 +208,12 @@ tc_valid(physio$PCO2_2, tc_PCO2(physio$PCO2_2_raw, physio$temp_water))
 # HCO3
 tc_valid(physio$HCO3_1, tc_HCO3(physio$pH_1, physio$PCO2_1, physio$temp_water)) 
 tc_valid(physio$HCO3_2, tc_HCO3(physio$pH_2, physio$PCO2_2, physio$temp_water)) 
-
+# Drop raw columns
+raw_cols <- colnames(physio)[stringr::str_detect(colnames(physio), "raw")]
+for (col in raw_cols) {
+  physio[, col] <- NULL
+}
+                             
 #### Define difference between blood parameters
 # ... The 'difference' variable is labelled using sample = '3'
 # ... for consistency with BS1 and BS2, so we can use the same code
