@@ -47,6 +47,11 @@ set.seed(1)
 #########################
 #### Data processing
 
+#### Focus on healthy individuals
+nrow(rates)
+rates <- rates[rates$healthy == 1L, ]
+nrow(rates)
+
 #### Number of observations 
 rates |> 
   filter(!is.na(rr)) |> 
@@ -106,22 +111,24 @@ utils.add::basic_stats(rates$rr, na.rm = TRUE)
 ind_cor <- !is.na(rates$hr) & !is.na(rates$rr)
 length(which(ind_cor))
 h <- cor.test(rates$hr[ind_cor], rates$rr[ind_cor], method = "spearman")
-# 0.5547736
+# 0.526666
 
 #### Correlations
 # Note the relatively high (negative) correlation
 # ... between body size and time from capture to surface
-pretty_pairs(rates[, c(
-  "hr", "rr",
-  "sex",
-  "size_len",
-  "time_from_capture_to_surface",
-  "time_from_surface_to_deck",
-  "temp_water",
-  "gaff",
-  "healthy", 
-  "surgery"
-)])
+if (FALSE) {
+  pretty_pairs(rates[, c(
+    "hr", "rr",
+    "sex",
+    "size_len",
+    "time_from_capture_to_surface",
+    "time_from_surface_to_deck",
+    "temp_water",
+    "gaff",
+    "healthy", 
+    "surgery"
+  )])
+}
 
 #### Define response variable
 resp <- "rr" # "hr"
@@ -165,7 +172,7 @@ rates_for_resp |>
   table() |>
   table() |>
   as.numeric() / length(unique(rates_for_resp$size_len))
-# For both variables, 74 % of events are uniquely defined by their size
+# For both variables, 78 % of events are uniquely defined by their size
 
 #### Period of observations
 # There are only few observations after more than 20 minutes
@@ -227,8 +234,8 @@ message(round(max(ranks$AIC) - min(ranks$AIC), digits = 2))
 message(rownames(ranks)[which.min(ranks$AIC)])
 mod <- get(rownames(ranks)[which.min(ranks$AIC)])
 mod <- mod_1
-# hr: delta AIC = 16.24
-# rr: delta AIC = 111.96
+# hr: delta AIC = 785.3056 - 779.9515 = 5.3541
+# rr: delta AIC = 1131.924 - 1023.269 = 108.655
 
 #### Model summary
 s <- summary(mod, digits = 3)
@@ -271,7 +278,6 @@ predict(mod,
   list_CIs()
 
 #### Visualise model predictions for each variable
-
 ## Set up figure to save
 if (save) {
   png(paste0("./fig/", resp, ".png"),
@@ -286,9 +292,9 @@ pp <- par(mfrow = c(2, 4), oma = c(2, 3, 2, 2), mar = c(2.1, 2, 2.1, 2))
 constants <- readRDS(here_data("helper", "constants.rds"))
 constants <- constants[, c("sex", "size_len", "temp_water", "time_from_capture_to_surface", 
                            "gaff", "surgery")]
-constants$time_from_surface_to_deck <- 1  # median across all IDs
-constants$time_from_deck_to_obs     <- 11 # median across all IDs
-constants$event_id <- factor(10, levels = levels(rates$event_id))
+constants$time_from_surface_to_deck <- median(rates$time_from_surface_to_deck)
+constants$time_from_deck_to_obs     <- median(rates$time_from_deck_to_obs)
+constants$event_id <- rates$event_id[!is.na(rates$hr) & !is.na(rates$rr)][1]
 
 ## Define graphical param
 # Define data used for model fitting
