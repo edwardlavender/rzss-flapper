@@ -86,7 +86,7 @@ physio$vemco[physio$surgery == "Y"]
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
 yvar <- "PO2"
-sample <- "3"
+sample <- "1"
 # lapply(resps, function(yvar) {
 #    lapply(c("1", "2", "3"), function(sample) {
 
@@ -711,14 +711,14 @@ if (!inherits(coefs$D, "character")) {
   utils.add::basic_stats(coefs$D, na.rm = TRUE)
 }
 ## BS1
-# min  mean median   max    sd  IQR  MAD
-# 1 10.06 41.79  42.03 66.33 18.93 20.7 21.8
+# min  mean median   max    sd   IQR   MAD
+# 10.06 40.82  38.58 66.33 18.92 21.35 23.39
 ## BS2
-# min  mean median   max   sd   IQR   MAD
-# 26.27 38.42  37.98 50.42 9.57 14.22 12.03
+# min  mean median   max  sd  IQR  MAD
+# 26.27 37.13  34.12 50.42 9.5 12.3 8.26
 ## Change
-# min mean median  max   sd  IQR MAD
-# 1 17.88 31.5  34.52 39.1 9.41 7.54 4.5
+# min  mean median  max   sd  IQR MAD
+# 17.94 31.52  34.52 39.1 9.39 7.52 4.5
 
 ### Visual examination of coefs
 # Add p-value stars to facilitate visual checking
