@@ -53,6 +53,16 @@ physio$time_from_surface_to_deck <- as.integer(difftime(physio$time_deck,
                                                         units = "mins"
 ))
 utils.add::basic_stats(physio$time_from_surface_to_deck)
+# Total time on deck for healthy individuals
+phealthy <- which(captures$healthy == 1L)
+utils.add::basic_stats(difftime(captures$time_release[phealthy], 
+                                captures$time_deck[phealthy], units = "mins"), 
+                       na.rm = TRUE)
+# min  mean median max   sd IQR  MAD
+# 1   9 19.65     20  31 5.18   6 4.45
+# Check the individual with the longest handling time
+captures$time_total <- difftime(captures$time_release, captures$time_deck, units = "mins")
+captures[which(captures$time_total == 31), ] 
 
 #### Define dataset
 # Focus on healthy or unhealthy individuals
@@ -85,8 +95,8 @@ physio$vemco[physio$surgery == "Y"]
 
 #### Define response variable/sample
 # "pH"   "PCO2" "PO2"  "HCO3" "lac"  "glu"  "K"    "Mg"
-yvar <- "PO2"
-sample <- "1"
+yvar <- "lac"
+sample <- "2"
 # lapply(resps, function(yvar) {
 #    lapply(c("1", "2", "3"), function(sample) {
 
