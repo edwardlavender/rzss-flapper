@@ -45,6 +45,36 @@ set.seed(1)
 
 #########################
 #########################
+#### Quick plot
+
+# Here, we plot a boxplot of vital rates
+# We include all individuals to check for differences between healthy/unhealthy individuals
+
+nr <- nrow(rates)
+pn <- which(rates$surgery == "N")
+py <- which(rates$surgery == "Y")
+ny <- length(pn)
+nn <- length(py)
+
+png(here_fig("rates_change_full.png"), 
+    height = 3, width = 8, units = "in", res = 800)
+ratesbox <- data.frame(parameter = c(rep("RR", nr*2), rep("HR", nr*2)), 
+                       healthy = c(rates$healthy, rates$healthy[pn], rates$healthy[py], 
+                                   rates$healthy, rates$healthy[pn], rates$healthy[py]),
+                       sample = c(rep("All", nr), rep("S[N]", nn), rep("S[Y]", ny), 
+                                rep("All", nr), rep("S[N]", nn), rep("S[Y]", ny)),
+                       value = c(rates$rr, rates$rr[pn], rates$rr[py], 
+                                rates$hr, rates$hr[pn], rates$hr[py]))
+  
+ggplot(ratesbox, aes(x = sample, y = value, fill = healthy)) +
+  geom_boxplot(varwidth = TRUE) +
+  facet_wrap(~parameter, scales = "free_y", ncol = 2) +
+  labs(x = "Group of individuals", y = "Heart (HR) or respiratory (RR) rate")
+dev.off()
+
+
+#########################
+#########################
 #### Data processing
 
 #### Focus on healthy individuals

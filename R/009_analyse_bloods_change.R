@@ -21,6 +21,9 @@ dv::clear()
 
 #### Essential packages
 library(dv)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
 library(prettyGraphics)
 # source(here_r("002_define_helpers.R"))
 
@@ -33,6 +36,54 @@ physio <- readRDS("./data/skate/physio.rds")
 # Define whether or not to save figures
 save <- TRUE
 set.seed(1)
+
+
+#########################
+#########################
+#### Quick plot
+
+# Here, we plot a boxplot of blood parameters
+# We include all individuals to check for differences between healthy/unhealthy individuals
+
+# Reshape data for ggplot2 
+physiobox <- 
+  physio |>
+  select(healthy, surgery,
+         pH_1, pH_2, 
+         PO2_1, PO2_2, 
+         HCO3_1, HCO3_2, 
+         lac_1, lac_2,
+         glu_1, glu_2, 
+         K_1, K_2, 
+         Mg_1, Mg_2) |> 
+  pivot_longer(cols = starts_with(c("pH_", "PO2_", "HCO3_", "lac_", "glu_", "K_", "Mg_")),
+               names_to = c(".value", "sample"),
+               names_pattern = "(.*)_(\\d)") |>
+  mutate(sample = ifelse(sample == "1", "BS1", "BS2")) |> 
+  pivot_longer(cols = c(pH, PO2, HCO3, lac, glu, K, Mg), 
+               names_to = "parameter", 
+               values_to = "value") 
+# Distinguish at BS2 between tagged/untagged individuals 
+physiobox_notag <- 
+  physiobox |> 
+  filter(sample == "BS2" & surgery == "N") |> 
+  mutate(sample = "BS2:S[N]")
+physiobox_tag <- 
+  physiobox |> 
+  filter(sample == "BS2" & surgery == "Y") |> 
+  mutate(sample = "BS2:S[Y]")
+# Join dataset
+physiobox <- 
+  rbind(physiobox, physiobox_notag, physiobox_tag) |> 
+  mutate(sample = factor(sample, levels = c("BS1", "BS2", "BS2:S[N]", "BS2:S[Y]")))
+# pplot 
+png(here_fig("blood_sample_change_full.png"), 
+    height = 6, width = 6, units = "in", res = 800)
+ggplot(physiobox, aes(x = sample, y = value, fill = healthy)) +
+  geom_boxplot(varwidth = TRUE) +
+  facet_wrap(~parameter, scales = "free_y", ncol = 2) +
+  labs(x = "Blood sample", "Blood parameter value")
+dev.off()
 
 
 #########################
