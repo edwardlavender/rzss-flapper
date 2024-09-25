@@ -82,6 +82,14 @@ mesh_around_elements <- build_mesh(
   mesh_type = "node"
 )
 
+#### Build mesh (around nodes)
+# (This code was added for a separate project)
+mesh_around_nodes <- build_mesh(
+  nodexy = nodexy,
+  trinodes = trinodes,
+  mesh_type = "element"
+)
+
 #### Save mesh
 saveRDS(
   nodexy,
@@ -94,6 +102,10 @@ saveRDS(
 saveRDS(
   mesh_around_elements,
   "./data/spatial/mesh/mesh_around_elements.rds"
+)
+saveRDS(
+  mesh_around_nodes,
+  "./data/spatial/mesh/mesh_around_nodes.rds"
 )
 
 
