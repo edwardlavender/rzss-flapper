@@ -3,7 +3,11 @@
 .RData
 .Ruserdata
 /data/
-/data-raw/
+/data-raw/*
+!/data-raw/skate/
+/data-raw/skate/*
+!/data-raw/skate/Skate acoustic tagging data .xlsx
+!/data-raw/skate/Skate data analysis shared.xlsx
 /fig/
 /R/deprecated/
 /doc/
